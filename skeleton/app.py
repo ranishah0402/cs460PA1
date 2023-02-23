@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Cs460cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Z@c!sstupid123'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -123,22 +123,37 @@ def register_user():
 	try:
 		email=request.form.get('email')
 		password=request.form.get('password')
+		#adding additional inputs in registeration 
+		first_name=request.form.get('fname')
+		last_name=request.form.get('lname')
+		birthday = request.form.get('DOB')
 	except:
 		print("couldn't find all tokens") #this prints to shell, end users will not see this (all print statements go to shell)
 		return flask.redirect(flask.url_for('register'))
 	cursor = conn.cursor()
 	test =  isEmailUnique(email)
-	if test:
+	#Adding test of birthdate 
+	testDOB = isDOBvalid(birthday)
+	if test and testDOB:
 		print(cursor.execute("INSERT INTO Users (email, password) VALUES ('{0}', '{1}')".format(email, password)))
 		conn.commit()
 		#log user in
 		user = User()
 		user.id = email
 		flask_login.login_user(user)
-		return render_template('hello.html', name=email, message='Account Created!')
+		return render_template('hello.html', name=first_name, message='Account Created!')
 	else:
-		print("couldn't find all tokens")
+		print("couldn't find all valid tokens")
 		return flask.redirect(flask.url_for('register'))
+
+import datetime
+def isDOBvalid(birthday):
+	date_format = '%m-%d-%y'
+	try: 
+		dateObject = datetime.datetime.strptime(birthday, date_format)
+		return True
+	except ValueError:
+		return False
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
@@ -164,6 +179,39 @@ def isEmailUnique(email):
 @flask_login.login_required
 def protected():
 	return render_template('hello.html', name=flask_login.current_user.id, message="Here's your profile")
+
+#Adding connections to each link 
+@app.route('/add_friend')
+@flask_login.login_required #means that login must be provided to enter page
+def friend_rec():
+	return render_template('add_friend.html', name=flask_login.current_user.id, message="Here are your friend recommendations")
+
+@app.route('/allalbums')
+def all_albums():
+	return render_template('allalbums.html', message="Here are all the albums")
+
+@app.route('/allphotos')
+def all_photos():
+	return render_template('allphotos.html', message = "here are all the photos")
+	#need to add option to add a tag 
+	#need to add option to comment
+	#need to add option to like photo
+
+@app.route('/userphotos')
+@flask_login.login_required
+def user_photos():
+	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos")
+	#need to add option to delete or modify photos here 
+	#option to select photos to add to album or create new album 
+
+@app.route('/create_album')
+@flask_login.login_required
+def create_album():
+	return render_template('create_album.html', name = flask_login.current_user.id, message="Youo can create an album here!")
+	#should be able to choose photos from user photos
+
+
+
 
 #begin photo uploading code
 # photos uploaded using base64 encoding so they can be directly embeded in HTML
