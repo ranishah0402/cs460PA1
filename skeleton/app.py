@@ -181,6 +181,8 @@ def isEmailUnique(email):
 		return True
 #end login code
 
+
+
 @app.route('/profile')
 @flask_login.login_required
 def protected():
@@ -199,7 +201,7 @@ def all_albums():
 @app.route('/allphotos')
 def all_photos():
 	return render_template('allphotos.html', message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
-	#need to add option to add a tag 
+	#need to add option to add a tag -- this should be in upload photo
 	#need to add option to comment
 	#need to add option to like photo
 
@@ -211,36 +213,68 @@ def user_photos():
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
 
-@app.route('/create_album')
+@app.route('/create_album', methods=['GET', 'POST'])
 @flask_login.login_required
 def create_album():
-	return render_template('create_album.html', name = flask_login.current_user.id, message="You can create an album here!")
+	if request.method == 'POST':
+		aname = request.form.get('album_name') #need to figure out how to get this
+		uid = uid = getUserIdFromEmail(flask_login.current_user.id)
+		mycursor = conn.cursor()
+		sql = "INSERT INTO Album (album_name, user_id) VALUES (%s, %s )", (aname, uid)
+		mycursor.execute(sql)
+		conn.commit()
+		return render_template('create_album.html', name = flask_login.current_user.id, message="You can create an album here!")
 	#should be able to choose photos from user photos
+	#also need to add album to database
+	else:
+		return render_template('create_album.html') 
+
 
 @app.route('/delete_photo')
 @flask_login.login_required
 def delete_photo():
-	return 
-	#NEED TO FILL IN FUNCTIONALITY SQL
+	#NEED TO FINISH IN FUNCTIONALITY SQL
 	#Remove photo from specific user database 
+	photo_id = "" #need to figure out what current photo id is, maybe use something like this @app.route('/<int:post_id>')
+	mycursor = conn.cursor()
+	sql = "DELETE FROM Pictures where picture_id = %s", photo_id
+	mycursor.execute(sql)
+	conn.commit()
+	return 
+	
 
-@app.route('/add_tag')
+@app.route('/add_tag', methods = ['GET', 'POST'])
 @flask_login.login_required
 def add_tag():
+	if request.method == 'POST':
+		tag_w = request.form.get('add_tag')
+		mycursor = conn.cursor()
+		sql = "INSERT INTO Tag (tag_word) VALUES (%s)", (tag_w)
+		mycursor.execute(sql)
+		conn.commit()
+		return render_template()#not sure which template should be rendered
 	return
-	#NEED TO FILL IN FUNCTIONALITY SQL
 	#Add a tag attribute associated with every photo and add periodically
 
 @app.route('/Like')
 def like():
 	return 
-	#NEED TO FILLL IN FUNCTIONALITY SQL
+	#NEED TO finish FUNCTIONALITY  in SQL
 	#Add a like attribute associated with every photo and increase periodically
 
-@app.route("/add_comment")
+@app.route("/add_comment", methods = ['GET', 'POST'])
 def add_comment():
+	
 	comment = request.form.get('add_comment')
-	return
+	if request.method == 'POST':
+		comment_text = request.form.get('add_comment')
+		uid = getUserIdFromEmail(flask_login.current_user.id)
+		photo_id = "" #need to figure this out
+		mycursor = conn.cursor()
+		sql = "INSERT INTO Comments (comment_text, user_id, photo_id) VALUES (%s, %s, %s)", (comment_text, uid, photo_id)
+		mycursor.execute(sql)
+		conn.commit()
+	return #not sure what to return here
 	#NEED TO FILL IN FUNCTIONALITY SQL 
 
 
