@@ -1,0 +1,38 @@
+<head>
+    <title>Here are your photos!</title>
+</head>
+
+{% if photos %}
+<h2>Here are your photos</h2>
+<a href='/create_album'>Create Album<input type = "button" value = "create_album"></a></li>
+
+    {% for photo in photos %}
+
+        <li>{{photo[2]}}<br>
+        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
+        <a href='/delete_photo'><input type = "button" value = "Delete Photo"></a></li>
+        <a href = '/add_tag'><input type = "button" value = "Add a tag"></a>
+    {% endfor %}
+    </ul>
+{% endif %}
+
+{% if message is none %}
+  <p>You should <a href='/login'>login!</a></p>
+{% else %}
+  <p> Go to <a href='/profile'>profile?</a></p>
+{% endif %}
+
+<ul>
+<li><a href='/allphotos'>View All photos</a></li>
+<li><a href='/allalbums'>View All Albums</a></li>
+<li><a href='/userphotos'>View User photos</a></li>
+<li><a href='/create_album'>Create an Album!</a></li>
+<li><a href='/contribution_score'>View Contribution Score</a></li>
+<li><a href ='/add_friend'>Add Friend</a></li>
+<li><a href='/upload'>Upload a photo</a> </li>
+<li><a href='/logout'>Logout</a></li>
+<li><a href='/'>Home</a></li>
+</ul>
+
+
+
