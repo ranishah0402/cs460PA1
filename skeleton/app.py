@@ -134,7 +134,7 @@ def register_user():
 	test =  isEmailUnique(email)
 	#Adding test of birthdate 
 	testDOB = isDOBvalid(birthday)
-	if test and testDOB:
+	if test:
 		print(cursor.execute("INSERT INTO Users (email, password) VALUES ('{0}', '{1}')".format(email, password)))
 		conn.commit()
 		#log user in
@@ -154,6 +154,12 @@ def isDOBvalid(birthday):
 		return True
 	except ValueError:
 		return False
+
+#NEW FUNCTION ADDED
+def getAllPhotos():
+	cursor = conn.cursor()
+	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
+	return cursor.fetchall()
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
@@ -192,7 +198,7 @@ def all_albums():
 
 @app.route('/allphotos')
 def all_photos():
-	return render_template('allphotos.html', message = "here are all the photos")
+	return render_template('allphotos.html', message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
 	#need to add option to add a tag 
 	#need to add option to comment
 	#need to add option to like photo
@@ -200,15 +206,42 @@ def all_photos():
 @app.route('/userphotos')
 @flask_login.login_required
 def user_photos():
-	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos")
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(), base64=base64)
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
 
 @app.route('/create_album')
 @flask_login.login_required
 def create_album():
-	return render_template('create_album.html', name = flask_login.current_user.id, message="Youo can create an album here!")
+	return render_template('create_album.html', name = flask_login.current_user.id, message="You can create an album here!")
 	#should be able to choose photos from user photos
+
+@app.route('/delete_photo')
+@flask_login.login_required
+def delete_photo():
+	return 
+	#NEED TO FILL IN FUNCTIONALITY SQL
+	#Remove photo from specific user database 
+
+@app.route('/add_tag')
+@flask_login.login_required
+def add_tag():
+	return
+	#NEED TO FILL IN FUNCTIONALITY SQL
+	#Add a tag attribute associated with every photo and add periodically
+
+@app.route('/Like')
+def like():
+	return 
+	#NEED TO FILLL IN FUNCTIONALITY SQL
+	#Add a like attribute associated with every photo and increase periodically
+
+@app.route("/add_comment")
+def add_comment():
+	comment = request.form.get('add_comment')
+	return
+	#NEED TO FILL IN FUNCTIONALITY SQL 
 
 
 
