@@ -235,9 +235,9 @@ def create_album():
 def delete_photo():
 	#NEED TO FINISH IN FUNCTIONALITY SQL
 	#Remove photo from specific user database 
-	photo_id = "" #need to figure out what current photo id is, maybe use something like this @app.route('/<int:post_id>')
+	picture_id = "" #need to figure out what current photo id is, maybe use something like this @app.route('/<int:post_id>')
 	mycursor = conn.cursor()
-	sql = "DELETE FROM Pictures where picture_id = %s", photo_id
+	sql = "DELETE FROM Pictures where picture_id = %s", picture_id
 	mycursor.execute(sql)
 	conn.commit()
 	return 
@@ -269,9 +269,9 @@ def add_comment():
 	if request.method == 'POST':
 		comment_text = request.form.get('add_comment')
 		uid = getUserIdFromEmail(flask_login.current_user.id)
-		photo_id = "" #need to figure this out
+		picture_id = "" #need to figure this out
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Comments (comment_text, user_id, photo_id) VALUES (%s, %s, %s)", (comment_text, uid, photo_id)
+		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)", (comment_text, uid, picture_id)
 		mycursor.execute(sql)
 		conn.commit()
 	return #not sure what to return here
