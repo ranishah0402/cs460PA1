@@ -256,8 +256,16 @@ def add_tag():
 	return
 	#Add a tag attribute associated with every photo and add periodically
 
-@app.route('/Like')
+@app.route('/Like', methods = ['GET', 'POST'])
 def like():
+	if request.method == 'POST':
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		photo_id = "" #need to figure out how to get this
+		mycursor = conn.cursor()
+		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s)", (user_id, photo_id)
+		mycursor.execute(sql)
+		conn.commit()
+		return render_template() #not sure what template to return
 	return 
 	#NEED TO finish FUNCTIONALITY  in SQL
 	#Add a like attribute associated with every photo and increase periodically
