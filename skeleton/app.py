@@ -118,7 +118,9 @@ def unauthorized_handler():
 def register():
 	return render_template('register.html', supress='True')
 
+
 @app.route("/register", methods=['POST'])
+
 def register_user():
 	try:
 		email=request.form.get('email')
@@ -135,7 +137,9 @@ def register_user():
 	#Adding test of birthdate 
 	testDOB = isDOBvalid(birthday)
 	if test:
-		print(cursor.execute("INSERT INTO Users (email, password) VALUES ('{0}', '{1}')".format(email, password)))
+		#adding contribution score
+		contribution_score = 0
+		print(cursor.execute("INSERT INTO Users (email, password, first_name, last_name, birthdate, contribution_score) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}')".format(email, password, first_name, last_name, birthday, contribution_score)))
 		conn.commit()
 		#log user in
 		user = User()
@@ -165,6 +169,13 @@ def getUsersPhotos(uid):
 	cursor = conn.cursor()
 	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
 	return cursor.fetchall() #NOTE return a list of tuples, [(imgdata, pid, caption), ...]
+
+#Adding too function to increment contribution score of specific user 
+#WORK ON 
+def increment_score(uid):
+	cursor = conn.cursor()
+	cursor.execute() #figure out how too increment contribution score 
+	return 
 
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
@@ -213,12 +224,27 @@ def user_photos():
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
 
+#Added new top 10 contributers function 
+
+def top_10_users():
+	#cursor = conn.cursor()
+	#cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
+	#return cursor.fetchall()
+	#COMPLETE FUNCTION TO GET NAME OF HIGHEST CONTRIBUTION SCORE 
+	return
+
+@app.route('/top_10_users')
+@flask_login.login_required
+def projecting_users():
+	return render_template('top_10_users.html', name = flask_login.current_user.id, message = "Here are the top 10 users", content = top_10_users(), base64=base64)
+	
+
 @app.route('/create_album', methods=['GET', 'POST'])
 @flask_login.login_required
 def create_album():
 	if request.method == 'POST':
-		aname = request.form.get('album_name') #need to figure out how to get this
-		uid = uid = getUserIdFromEmail(flask_login.current_user.id)
+		aname = request.form.get('album_name') 
+		uid = getUserIdFromEmail(flask_login.current_user.id)
 		mycursor = conn.cursor()
 		sql = "INSERT INTO Album (album_name, user_id) VALUES (%s, %s )", (aname, uid)
 		mycursor.execute(sql)
@@ -257,6 +283,7 @@ def add_tag():
 	#Add a tag attribute associated with every photo and add periodically
 
 @app.route('/Like', methods = ['GET', 'POST'])
+@flask_login.login_required
 def like():
 	if request.method == 'POST':
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
@@ -271,12 +298,12 @@ def like():
 	#Add a like attribute associated with every photo and increase periodically
 
 @app.route("/add_comment", methods = ['GET', 'POST'])
+@flask_login.login_required
 def add_comment():
-	
-	comment = request.form.get('add_comment')
 	if request.method == 'POST':
 		comment_text = request.form.get('add_comment')
 		uid = getUserIdFromEmail(flask_login.current_user.id)
+		increment_score(uid)
 		picture_id = "" #need to figure this out
 		mycursor = conn.cursor()
 		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)", (comment_text, uid, picture_id)
@@ -302,6 +329,8 @@ def upload_file():
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
 		photo_data =imgfile.read()
+		#Adding line to call function to increment contribution score
+		increment_score(uid)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s )''', (photo_data, uid, caption))
 		conn.commit()
