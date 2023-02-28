@@ -9,11 +9,14 @@
     {% for photo in photos %}
 
         <li>{{photo[2]}}<br>
-        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
-        <label for="add_comment">Please comment:</label>
-        <input type="text" name="add_comment" required='false' />
+        <a href=”/like-comment“> <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}' width=”100″ height=”132″> </a>
+        <h3> Click on photo to like or comment</h3>
+        
+        <form>
+            <label for="add_comment">Please comment:</label>
+            <input type="text" name="add_comment" required='false' />
+        </form>
         <a href = "/Like"><input type = "button" value = "Like the photo"></a>
-        <a href = '/add_tag'><input type = "button" value = "Add a tag"></a> <!-- this should be in the upload photo page -->
     {% endfor %}
     </ul>
 {% endif %}
