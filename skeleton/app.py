@@ -253,6 +253,8 @@ def create_album():
 
 
 #------------FRIEND MANAGEMENT-----------
+#SOMETHING IS WRONG WITH LOADING THIS BUT IM NOT SURE WHAT
+
 """ 
 @app.route('/add_friend')
 @flask_login.login_required #means that login must be provided to enter page
@@ -266,19 +268,19 @@ def friend_rec():
 def show_on_page():
 	email = flask_login.current_user.id
 	uid = getUserIdFromEmail(email)
-	return render_template('add_friend.html', friends=showFriends(uid))
+	return render_template('add_friend.html', name=flask_login.current_user.id, friends=showFriends(uid))
 
 #showing a list of all of a user's friends
 def showFriends(uid):
 	mycursor = conn.cursor()
-	sql = "SELECT friend_id FROM friends_with WHERE user_id = '%s'", uid 
-	mycursor.execute(sql)
+	sql = "SELECT friend_id FROM friends_with WHERE user_id = '%s'"
+	mycursor.execute(sql, uid)
 	Res = mycursor.fetchall()
 	friendIds = [x[0] for x in Res]
 	Friends = []
 	for index in friendIds:
-		sql2 = "SELECT first_name, last_name FROM Users WHERE user_id = '%s'", index
-		mycursor.execute(sql2)
+		sql2 = "SELECT first_name, last_name FROM Users WHERE user_id = '%s'"
+		mycursor.execute(sql2, index)
 		F = (cursor.fetchone())
 		F = (str(F[0]), str(F[1]))
 		Friends.append(F)
@@ -288,8 +290,8 @@ def showFriends(uid):
 #get someone's name from their email
 def getUserNameFromEmail(email):
 	mycursor = conn.cursor()
-	sql = "SELECT first_name, last_name FROM Users WHERE email = '%s'", (email)
-	mycursor.execute(sql)
+	sql = "SELECT first_name, last_name FROM Users WHERE email = '%s'"
+	mycursor.execute(sql, email)
 	U = cursor.fetchone()
 	U = [str(item) for item in U]
 	return U
@@ -313,10 +315,10 @@ def add_friend():
 	friend_id = request.form.get('friend_id')
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
 	mycursor = conn.cursor()
-	sql = "INSERT INTO friends_with (user_id, friend_id) VALUES (%s, %s)", (user_id, friend_id)
-	cursor.execute(sql)
+	sql = "INSERT INTO friends_with (user_id, friend_id) VALUES (%s, %s)"
+	cursor.execute(sql, (user_id, friend_id))
 	conn.commit()
-	return flask.redirect(flask.url_for('show_on_page')) #THIS IS DEFINITELY THE WRONG RETURN STATEMENT IDK WHAT TO PUT HERE
+	return flask.redirect(flask.url_for('show_on_page')) 
 
 #-------END OF FRIEND MANAGEMENT--------
 
@@ -330,12 +332,12 @@ def add_tag():
 		p = request.values.get('picture_id')
 		picture_id = int(p) 
 		mycursor = conn.cursor()
-		sql = "INSERT IGNORE INTO Tag (tag_word) VALUES (%s)", (tag_w)
-		mycursor.execute(sql)
+		sql = "INSERT IGNORE INTO Tag (tag_word) VALUES (%s)"
+		mycursor.execute(sql, tag_w)
 		conn.commit()
 		tid = 0 #need to figure out how to get the id of the tag
-		sql2 = "INSERT INTO assigned_tag (photo_id, tag_id) VALUE (%s, %s)", (picture_id, tid)
-		mycursor.execute(sql2)
+		sql2 = "INSERT INTO assigned_tag (photo_id, tag_id) VALUE (%s, %s)"
+		mycursor.execute(sql2, (picture_id, tid))
 		conn.commit()
 		return render_template()#not sure which template should be rendered
 	return render_template()
@@ -354,8 +356,8 @@ def like():
 	if request.method == 'POST':
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s, %s)", (user_id, photo_id)
-		mycursor.execute(sql)
+		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s, %s)"
+		mycursor.execute(sql, (user_id, photo_id))
 		conn.commit()
 		return render_template() #not sure what template to return
 	return 
@@ -392,8 +394,8 @@ def add_comment():
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		increment_score(uid)
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)", (comment_text, uid, photo_id)
-		mycursor.execute(sql)
+		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)"
+		mycursor.execute(sql, (comment_text, uid, photo_id))
 		conn.commit()
 	return #not sure what to return here
 	#NEED TO FILL IN FUNCTIONALITY SQL 
@@ -428,15 +430,15 @@ def upload_file():
 #end photo uploading code
 
 #DELETE PHOTOS
-@app.route('/delete_photo')
+@app.route('/delete_photo', methods = ['POST'])
 @flask_login.login_required
 def delete_photo():
 	#NEED TO FINISH IN FUNCTIONALITY SQL
 	#Remove photo from specific user database 
-	picture_id = "" #need to figure out what current photo id is, maybe use something like this @app.route('/<int:post_id>')
+	picture_id = request.values.get('picture_id')
 	mycursor = conn.cursor()
-	sql = "DELETE FROM Pictures where picture_id = %s", picture_id
-	mycursor.execute(sql)
+	sql = "DELETE FROM Pictures where picture_id = %s"
+	mycursor.execute(sql, picture_id)
 	conn.commit()
 	return 
 

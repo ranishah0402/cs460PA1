@@ -3,7 +3,9 @@
 <head>
 	<title>Finding Friends!</title>
 </head>
+ 
 <body>
+     
     {% if friends_with %}
         <h3> Here are your friends: </h3>
         <ul>
@@ -11,7 +13,7 @@
                 <li><a href=""{{friend}}></li>
             {%endfor%}
         </ul>
-    {% endif % }
+    {% endif % } ]
 
     <h3>Find New Friends: </h3>
     <form action="{{ url_for('results') }}" method = "POST">
@@ -31,3 +33,4 @@
     {%endif%}
 
 </body>
+
