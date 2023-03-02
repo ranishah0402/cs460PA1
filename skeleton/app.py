@@ -381,7 +381,17 @@ def add_friend():
 	conn.commit()
 	return flask.redirect(flask.url_for('add_friend_page')) 
 
-	
+#give friend recommendations	
+#need to figure out routing
+@flask_login.login_required
+def friend_recs():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	mycursor = conn.cursor()
+	sql = "SELECT email FROM Users U INNER JOIN friends_with ff ON U.user_id = ff.friend_id INNER JOIN friend f ON f.user_id = ff.friend_id WHERE ff.user_id = '{0}' AND U.user_id <> '{1}'; AND NOT EXISTS (select f2.friend_id from friends_with f2 WHERE f2.friend_id = ff.friend_id AND U.user_id = f2.user_id)".format(user_id, user_id)
+	cursor.execute(sql)
+	conn.commit()
+	Friends = []
+	return Friends
 
 #-------END OF FRIEND MANAGEMENT--------
 
@@ -453,6 +463,46 @@ def topTags():
 	output = cursor.fetchall()
 	tags = [(str(item[0])) for item in output]
 	return tags 
+
+#find a single user's top 3 tags
+@flask_login.login_required
+def userTopTags(user_id):
+	mycursor = conn.cursor()
+	sql = "SELECT tag_id FROM assigned_tag, Tag, Pictures WHERE assigned_tag.picture_id = Pictures.picture_id and user_id = '{0}' GROUP BY tag_id HAVING COUNT (*) > 0 ORDER BY COUNT DESC LIMIT 3".format(user_id)
+	mycursor.execute(sql)
+	output = cursor.fetchall()
+	tags = [(str(item[0])) for item in output]
+	return tags
+
+#give them other photos based on their top 3 tags:
+@flask_login.login_required
+#need to figure out a route late
+def recPhotos():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	topTagsByUser = userTopTags(user_id)
+	mycursor = conn.cursor()
+	mycursor.execute("SELECT picture_id FROM Pictures")
+	picture_ids = mycursor.fetchall()
+	picture_ids = [int(p[0]) for p in picture_ids]
+	rating = [0] * len(picture_ids)
+	for i in range(len(picture_ids)):
+		for tag in topTagsByUser:
+			sql = "SELECT COUNT (*) assigned_tag WHERE picture_id = '{0}' AND tag_id= = '{1}' ".format(picture_ids[i], tag)
+			mycursor.execute(sql)
+			count = int(cursor.fetchone()[0])
+			if count > 0:
+				rating[i] = rating[i] + 1
+	pictureRating = [(picture_ids[i], rating[i]) for i in range(len(picture_ids))]
+	pictureRating = sorted(pictureRating, key = lambda val: (-val[1], val[0]))
+	final_photos = []
+	for i in range(len(pictureRating)):
+		mycursor.execute("SELECT imgdata FROM Pictures WHERE picture_id = '{0}'").format(pictureRating[i][0])
+		output = mycursor.fetchall()
+		final_photos.append([item[0] for item in output])
+	return final_photos
+
+#------END OF TAG MANAGEMENT---------
+
 
 #------LIKE MANAGEMENT---------
 @app.route('/add_like', methods = ['GET', 'POST'])
