@@ -1,27 +1,36 @@
 <!DOCTYPE html>
+
 <html>
+
 <head>
+
 	<title>Finding Friends!</title>
+
 </head>
- 
-<body>
-     
-    {% if friends_with %}
-        <h3> Here are your friends: </h3>
+
+<body> 
+    <h3>Here are your friends: </h3>
+    {%if friends%}
         <ul>
-            {% for friend in friends_with %}
-                <li><a href=""{{friend}}></li>
+            {%for friend in friends%}
+            <li><a href=""{{friend}}></li>
             {%endfor%}
         </ul>
-    {% endif % } ]
+    {%endif%}
+
+
 
     <h3>Find New Friends: </h3>
-    <form action="{{ url_for('results') }}" method = "POST">
-        <input type="text" name = "friendEmail" placeholder="Users Email"/>
-        <input type = "hidden" value = {{friend_id}} name="hidden" required = 'true' />
-        <br/>
-        <input type="submit" name="submit" placeholder="Search for friends"/>
+    <form method="post" action="{{ url_for('results') }}"> 
+        <label for="new_friends">Enter their email:</label>
+        <input type="text" name="friendEmail" /><br />
+        <input type="hidden" value = {{friend_id}} name="hidden" required='true' /><br />
+        <input type="submit" /> 
     </form>
+
+
+
+
 
     {% if user_creds %}
         <h3> Here is your result: </h3>
@@ -32,5 +41,20 @@
         </form>
     {%endif%}
 
-</body>
 
+
+    <ul>
+        <li><a href='/allphotos'>View All photos</a></li>
+        <li><a href='/allalbums'>View All Albums</a></li>
+        <li><a href='/userphotos'>View User photos</a></li>
+        <li><a href='/create_album'>Create an Album!</a></li>
+        <li><a href='/contribution_score'>View Contribution Score</a></li>
+        <li><a href ='/add_friend'>Add Friend</a></li>
+        <li><a href='/upload'>Upload a photo</a> </li>
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+    </ul>
+
+    
+
+</body>

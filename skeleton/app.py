@@ -277,6 +277,7 @@ def create_album():
 #------------FRIEND MANAGEMENT-----------
 #SOMETHING IS WRONG WITH LOADING THIS BUT IM NOT SURE WHAT
 
+
 """ 
 @app.route('/add_friend')
 @flask_login.login_required #means that login must be provided to enter page
@@ -285,14 +286,18 @@ def friend_rec():
 """
 
 #what to show on the add friend page right away
-@app.route('/add_friend', methods = ['GET'])
+
+@app.route('/add_friend')#, methods = ['GET'])
+
 @flask_login.login_required
-def show_on_page():
+
+def add_friend_page():
 	email = flask_login.current_user.id
 	uid = getUserIdFromEmail(email)
 	return render_template('add_friend.html', name=flask_login.current_user.id, friends=showFriends(uid))
 
 #showing a list of all of a user's friends
+
 def showFriends(uid):
 	mycursor = conn.cursor()
 	sql = "SELECT friend_id FROM friends_with WHERE user_id = '%s'"
@@ -304,9 +309,15 @@ def showFriends(uid):
 		sql2 = "SELECT first_name, last_name FROM Users WHERE user_id = '%s'"
 		mycursor.execute(sql2, index)
 		F = (cursor.fetchone())
-		F = (str(F[0]), str(F[1]))
+		if(F!=None):
+			F = (str(F[0]), str(F[1]))
 		Friends.append(F)
 	return Friends
+
+	
+
+
+
 
 
 #get someone's name from their email
@@ -318,29 +329,58 @@ def getUserNameFromEmail(email):
 	U = [str(item) for item in U]
 	return U
 
+""" 
+
+ #get the user name from email function:
+
+def getUserNameFromEmail(email):
+
+	mycursor = conn.cursor()
+
+	sql = "SELECT first_name, last_name  FROM Users WHERE email = '{0}'".format(email)
+
+	mycursor.execute(sql)
+
+	N = cursor.fetchone()
+
+	#N = [str(x) for x in N]
+
+	return N 
+
+	"""
+
+
+
 #getting results of searched friends
 @app.route('/results', methods = ['POST', 'GET'])
 @flask_login.login_required #means that login must be provided to enter page
 def results():
 	if request.method == 'POST':
 		friendEmail = request.form.get('friendEmail')
-		user_creds = "" #getUserNameFromEmail have yet to implement getusername function
+		#user_creds = getUserNameFromEmail(friendEmail) 
 		friend_id = getUserIdFromEmail(friendEmail)
-		return render_template('add_friend.html', user_creds = user_creds, friend_id=friend_id)
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		mycursor = conn.cursor()
+		sql = "INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id)
+		mycursor.execute("INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id))
+		conn.commit()
+		return render_template('add_friend.html')#, user_creds = user_creds, friend_id=friend_id)
 	else:
 		return render_template() #need to figure out what to redirect to
 
 #adding friends function	
-@app.route('/add_friends')
+@app.route('/add_friends', methods = ['POST', 'GET'])
 @flask_login.login_required
 def add_friend():
-	friend_id = request.form.get('friend_id')
+	friend_id = getUserIdFromEmail(request.form.get('friend_id'))
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
 	mycursor = conn.cursor()
-	sql = "INSERT INTO friends_with (user_id, friend_id) VALUES (%s, %s)"
-	cursor.execute(sql, (user_id, friend_id))
+	sql = "INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id)
+	mycursor.execute(sql)
 	conn.commit()
-	return flask.redirect(flask.url_for('show_on_page')) 
+	return flask.redirect(flask.url_for('add_friend_page')) 
+
+	
 
 #-------END OF FRIEND MANAGEMENT--------
 
