@@ -14,11 +14,12 @@ DROP TABLE IF EXISTS Users CASCADE;
 
 CREATE TABLE Users (
     user_id int4  NOT NULL AUTO_INCREMENT,
+    contribution_score int4,
     email varchar(255) UNIQUE,
     password varchar(255) NOT NULL DEFAULT '',
     first_name varchar(225) NOT NULL DEFAULT '',
     last_name varchar(225) NOT NULL DEFAULT '',
-    birthdate DATE,
+    birthdate varchar(225),
     hometown varchar(225),
     gender varchar(6),
   CONSTRAINT users_pk PRIMARY KEY (user_id)
@@ -40,7 +41,7 @@ CREATE TABLE Pictures
   imgdata longblob ,
   caption VARCHAR(255),
   INDEX upid_idx (user_id),
-  album_id int4 NOT NULL,
+  album_id int4,
   CONSTRAINT pictures_pk PRIMARY KEY (picture_id),
   CONSTRAINT user_fk1 FOREIGN KEY (user_id) REFERENCES Users(user_id),
   CONSTRAINT album_fk FOREIGN KEY (album_id) REFERENCES Album(album_id) ON DELETE CASCADE
@@ -52,18 +53,18 @@ CREATE TABLE Comments (
     comment_text VARCHAR(225) NOT NULL,
     comment_date DATETIME DEFAULT CURRENT_TIMESTAMP,
     user_id int4 NOT NULL,
-    photo_id int4 NOT NULL,
+    picture_id int4 NOT NULL,
     CONSTRAINT comment_pk PRIMARY KEY (comment_id),
     CONSTRAINT user_fk2 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    CONSTRAINT photo_fk1 FOREIGN KEY (photo_id) REFERENCES Pictures(picture_id) ON DELETE CASCADE
+    CONSTRAINT photo_fk1 FOREIGN KEY (picture_id) REFERENCES Pictures(picture_id) ON DELETE CASCADE
 );
 
 CREATE TABLE Likes (
     user_id int4,
-    photo_id int4,
-    CONSTRAINT like_pk PRIMARY KEY (photo_id, user_id),
+    picture_id int4,
+    CONSTRAINT like_pk PRIMARY KEY (picture_id, user_id),
     CONSTRAINT user_fk3 FOREIGN KEY (user_id) REFERENCES Users(user_id) ON DELETE CASCADE,
-    CONSTRAINT photo_fk2 FOREIGN KEY (photo_id) REFERENCES Pictures(picture_id) ON DELETE CASCADE
+    CONSTRAINT photo_fk2 FOREIGN KEY (picture_id) REFERENCES Pictures(picture_id) ON DELETE CASCADE
 );
 
 CREATE TABLE Tag(
@@ -73,10 +74,10 @@ CREATE TABLE Tag(
 );
 
 CREATE TABLE assigned_tag(
-	photo_id int4,
+	picture_id int4,
     tag_id int4,
-    CONSTRAINT photo_tag_pk PRIMARY KEY (photo_id, tag_id),
-    CONSTRAINT photo_fk3 FOREIGN KEY (photo_id) REFERENCES Pictures(picture_id),
+    CONSTRAINT photo_tag_pk PRIMARY KEY (picture_id, tag_id),
+    CONSTRAINT photo_fk3 FOREIGN KEY (picture_id) REFERENCES Pictures(picture_id),
 	CONSTRAINT tag_fk FOREIGN KEY (tag_id) REFERENCES Tag(tag_id)
 
 );

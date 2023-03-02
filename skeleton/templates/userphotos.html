@@ -9,12 +9,21 @@
     {% for photo in photos %}
 
         <li>{{photo[2]}}<br>
-        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
+        <img width="450px" height="300px" src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
         <a href='/delete_photo'><input type = "button" value = "Delete Photo"></a></li>
         <a href = '/add_tag'><input type = "button" value = "Add a tag"></a>
     {% endfor %}
     </ul>
 {% endif %}
+
+
+
+
+
+
+
+
+
 
 {% if message is none %}
   <p>You should <a href='/login'>login!</a></p>

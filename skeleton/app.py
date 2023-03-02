@@ -88,7 +88,8 @@ def login():
 		   <a href='/'>Home</a>
 			   '''
 	#The request method is POST (page is recieving data)
-	email = flask.request.form['email']
+	#email = flask.request.form['email']
+	email = request.form.get('email')
 	cursor = conn.cursor()
 	#check if email is registered
 	if cursor.execute("SELECT password FROM Users WHERE email = '{0}'".format(email)):
@@ -118,7 +119,9 @@ def unauthorized_handler():
 def register():
 	return render_template('register.html', supress='True')
 
+
 @app.route("/register", methods=['POST'])
+
 def register_user():
 	try:
 		email=request.form.get('email')
@@ -135,7 +138,9 @@ def register_user():
 	#Adding test of birthdate 
 	testDOB = isDOBvalid(birthday)
 	if test:
-		print(cursor.execute("INSERT INTO Users (email, password) VALUES ('{0}', '{1}')".format(email, password)))
+		#adding contribution score
+		contribution_score = 0
+		print(cursor.execute("INSERT INTO Users (email, password, first_name, last_name, birthdate, contribution_score) VALUES ('{0}', '{1}', '{2}', '{3}', '{4}', '{5}')".format(email, password, first_name, last_name, birthday, contribution_score)))
 		conn.commit()
 		#log user in
 		user = User()
@@ -155,16 +160,36 @@ def isDOBvalid(birthday):
 	except ValueError:
 		return False
 
+def getUserNameFromId(user_id):
+    cursor = conn.cursor()
+    cursor.execute("SELECT first_name  FROM Users WHERE user_id = '{0}'".format(user_id))
+    return cursor.fetchone()[0]
+
 #NEW FUNCTION ADDED
 def getAllPhotos():
 	cursor = conn.cursor()
 	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
 	return cursor.fetchall()
+    
+def getAllPIDS():
+	cursor = conn.cursor()
+	cursor.execute("SELECT picture_id FROM Pictures")
+	I = cursor.fetchall()
+	ids = [item[0] for item in I]
+	return ids
+
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
 	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE user_id = '{0}'".format(uid))
 	return cursor.fetchall() #NOTE return a list of tuples, [(imgdata, pid, caption), ...]
+
+#Adding too function to increment contribution score of specific user 
+#WORK ON 
+def increment_score(uid):
+	cursor = conn.cursor()
+	cursor.execute() #figure out how too increment contribution score 
+	return 
 
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
@@ -188,37 +213,57 @@ def isEmailUnique(email):
 def protected():
 	return render_template('hello.html', name=flask_login.current_user.id, message="Here's your profile")
 
-#Adding connections to each link 
-@app.route('/add_friend')
-@flask_login.login_required #means that login must be provided to enter page
-def friend_rec():
-	return render_template('add_friend.html', name=flask_login.current_user.id, message="Here are your friend recommendations")
+
 
 @app.route('/allalbums')
 def all_albums():
 	return render_template('allalbums.html', message="Here are all the albums")
 
+
+#all comments and number of likes along with name of user listed here 
 @app.route('/allphotos')
 def all_photos():
-	return render_template('allphotos.html', message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
-	#need to add option to add a tag -- this should be in upload photo
-	#need to add option to comment
-	#need to add option to like photo
+	return render_template('allphotos.html',
+							comments=get_all_comments(getAllPIDS()), 
+							#likes = getLikes(getAllPIDS())[0],
+							#usersLiked=getLikes(getAllPIDS()),
+							message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
+							
+	#need to see all tags
+	
 
 @app.route('/userphotos')
 @flask_login.login_required
 def user_photos():
 	uid = getUserIdFromEmail(flask_login.current_user.id)
-	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(), base64=base64)
+	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(uid), base64=base64)
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
+
+#Added new top 10 contributers function 
+
+def top_10_users():
+	Users =[]
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Users order by contribution_score ASC LIMIT 10") #CHeck if this SQL code is right
+	U = cursor.fetchall()
+	Users.append(U)
+	return Users
+	 
+	 
+
+@app.route('/top_10_users')
+@flask_login.login_required
+def projecting_users():
+	return render_template('top_10_users.html', name = flask_login.current_user.id, message = "Here are the top 10 users", content = top_10_users(), base64=base64)
+	
 
 @app.route('/create_album', methods=['GET', 'POST'])
 @flask_login.login_required
 def create_album():
 	if request.method == 'POST':
-		aname = request.form.get('album_name') #need to figure out how to get this
-		uid = uid = getUserIdFromEmail(flask_login.current_user.id)
+		aname = request.form.get('album_name') 
+		uid = getUserIdFromEmail(flask_login.current_user.id)
 		mycursor = conn.cursor()
 		sql = "INSERT INTO Album (album_name, user_id) VALUES (%s, %s )", (aname, uid)
 		mycursor.execute(sql)
@@ -230,63 +275,175 @@ def create_album():
 		return render_template('create_album.html') 
 
 
-@app.route('/delete_photo')
-@flask_login.login_required
-def delete_photo():
-	#NEED TO FINISH IN FUNCTIONALITY SQL
-	#Remove photo from specific user database 
-	picture_id = "" #need to figure out what current photo id is, maybe use something like this @app.route('/<int:post_id>')
-	mycursor = conn.cursor()
-	sql = "DELETE FROM Pictures where picture_id = %s", picture_id
-	mycursor.execute(sql)
-	conn.commit()
-	return 
-	
+#------------FRIEND MANAGEMENT-----------
+#SOMETHING IS WRONG WITH LOADING THIS BUT IM NOT SURE WHAT
 
+""" 
+@app.route('/add_friend')
+@flask_login.login_required #means that login must be provided to enter page
+def friend_rec():
+	return render_template('add_friend.html', name=flask_login.current_user.id, message="Here are your friend recommendations")
+"""
+
+#what to show on the add friend page right away
+@app.route('/add_friend', methods = ['GET'])
+@flask_login.login_required
+def show_on_page():
+	email = flask_login.current_user.id
+	uid = getUserIdFromEmail(email)
+	return render_template('add_friend.html', name=flask_login.current_user.id, friends=showFriends(uid))
+
+#showing a list of all of a user's friends
+def showFriends(uid):
+	mycursor = conn.cursor()
+	sql = "SELECT friend_id FROM friends_with WHERE user_id = '%s'"
+	mycursor.execute(sql, uid)
+	Res = mycursor.fetchall()
+	friendIds = [x[0] for x in Res]
+	Friends = []
+	for index in friendIds:
+		sql2 = "SELECT first_name, last_name FROM Users WHERE user_id = '%s'"
+		mycursor.execute(sql2, index)
+		F = (cursor.fetchone())
+		F = (str(F[0]), str(F[1]))
+		Friends.append(F)
+	return Friends
+
+
+#get someone's name from their email
+def getUserNameFromEmail(email):
+	mycursor = conn.cursor()
+	sql = "SELECT first_name, last_name FROM Users WHERE email = '%s'"
+	mycursor.execute(sql, email)
+	U = cursor.fetchone()
+	U = [str(item) for item in U]
+	return U
+
+#getting results of searched friends
+@app.route('/results', methods = ['POST', 'GET'])
+@flask_login.login_required #means that login must be provided to enter page
+def results():
+	if request.method == 'POST':
+		friendEmail = request.form.get('friendEmail')
+		user_creds = "" #getUserNameFromEmail have yet to implement getusername function
+		friend_id = getUserIdFromEmail(friendEmail)
+		return render_template('add_friend.html', user_creds = user_creds, friend_id=friend_id)
+	else:
+		return render_template() #need to figure out what to redirect to
+
+#adding friends function	
+@app.route('/add_friends')
+@flask_login.login_required
+def add_friend():
+	friend_id = request.form.get('friend_id')
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	mycursor = conn.cursor()
+	sql = "INSERT INTO friends_with (user_id, friend_id) VALUES (%s, %s)"
+	cursor.execute(sql, (user_id, friend_id))
+	conn.commit()
+	return flask.redirect(flask.url_for('show_on_page')) 
+
+#-------END OF FRIEND MANAGEMENT--------
+
+	
+#--------------TAG MANAGEMENT----------
 @app.route('/add_tag', methods = ['GET', 'POST'])
 @flask_login.login_required
 def add_tag():
 	if request.method == 'POST':
 		tag_w = request.form.get('add_tag')
+		p = request.values.get('picture_id')
+		picture_id = int(p) 
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Tag (tag_word) VALUES (%s)", (tag_w)
-		mycursor.execute(sql)
+		sql = "INSERT IGNORE INTO Tag (tag_word) VALUES (%s)"
+		mycursor.execute(sql, tag_w)
+		conn.commit()
+		tid = 0 #need to figure out how to get the id of the tag
+		sql2 = "INSERT INTO assigned_tag (photo_id, tag_id) VALUE (%s, %s)"
+		mycursor.execute(sql2, (picture_id, tid))
 		conn.commit()
 		return render_template()#not sure which template should be rendered
-	return
+	return render_template()
 	#Add a tag attribute associated with every photo and add periodically
 
-@app.route('/Like', methods = ['GET', 'POST'])
+#search by tags function:
+
+#view all tags
+
+#------LIKE MANAGEMENT---------
+@app.route('/add_like', methods = ['GET', 'POST'])
 def like():
+	pid = request.form.get('picture_id')
+	photo_id = int(pid)
 	if request.method == 'POST':
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
-		photo_id = "" #need to figure out how to get this
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s)", (user_id, photo_id)
-		mycursor.execute(sql)
+		
+		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s, %s)"
+		mycursor.execute(sql, (user_id, photo_id))
 		conn.commit()
-		return render_template() #not sure what template to return
-	return 
-	#NEED TO finish FUNCTIONALITY  in SQL
-	#Add a like attribute associated with every photo and increase periodically
+		return render_template('allphotos.html') 
+	else:
+		return render_template('allphotos.html')
+	 
+	
+#function directly called when rendering all_photos page
+#SOMETHING WRONG WITH FUNCTION 
+def getLikes(picture_ids):
+	#mycursor = conn.cursor()
+	#Likes = []
+	Users = []
+	for id in picture_ids:
+		#SAYING THERE IS A PROBLEM WITH SQL SYNTAX HERE 
+		#sql = "SELECT COUNT (*) FROM Likes WHERE photo_id = '{0}'".format(id) 
+		#mycursor.execute(sql)
+		#Like = int(mycursor.fetchone())
+		#Likes.append(Like)
+		mycursor = conn.cursor()
+		cursor.execute("SELECT user_id FROM Likes WHERE picture_id = '{0}'".format(id))
+		U = mycursor.fetchall()
+		#U = [str(getUserNameFromId(int(item[0]))) for item in U] #need to implement getuserfromid 
+		Users.append(U)
+	return  Users 
+
+
+	
+
+#-----COMMENT MANAGEMENT------
 
 @app.route("/add_comment", methods = ['GET', 'POST'])
+@flask_login.login_required
 def add_comment():
-	
-	comment = request.form.get('add_comment')
+	pid = request.form.get('picture_id')
+	photo_id = int(pid)
 	if request.method == 'POST':
 		comment_text = request.form.get('add_comment')
 		uid = getUserIdFromEmail(flask_login.current_user.id)
-		picture_id = "" #need to figure this out
+		#increment_score(uid)
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)", (comment_text, uid, picture_id)
-		mycursor.execute(sql)
+		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)"
+		mycursor.execute(sql, (comment_text, uid, photo_id))
 		conn.commit()
-	return #not sure what to return here
-	#NEED TO FILL IN FUNCTIONALITY SQL 
+		return render_template('allphotos.html')
+	else:
+		return render_template('allphotos.html')
+	
 
+#function directly called when rendering all_photos page 
+def get_all_comments(pids):
+	cursor = conn.cursor()
+	Comments = []
+	for id in pids:
+		cursor.execute("SELECT comment_text, user_id FROM Comments where picture_id = '{0}'".format(id))
+		T = cursor.fetchall()
+		C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
+		Comments.append(C)
+		return Comments
+		
+		
+	
 
-
+#------PHOTO MANAGEMENT ------
 
 #begin photo uploading code
 # photos uploaded using base64 encoding so they can be directly embeded in HTML
@@ -302,6 +459,8 @@ def upload_file():
 		imgfile = request.files['photo']
 		caption = request.form.get('caption')
 		photo_data =imgfile.read()
+		#Adding line to call function to increment contribution score
+		#increment_score(uid)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s )''', (photo_data, uid, caption))
 		conn.commit()
@@ -311,6 +470,18 @@ def upload_file():
 		return render_template('upload.html')
 #end photo uploading code
 
+#DELETE PHOTOS
+@app.route('/delete_photo', methods = ['POST'])
+@flask_login.login_required
+def delete_photo():
+	#NEED TO FINISH IN FUNCTIONALITY SQL
+	#Remove photo from specific user database 
+	picture_id = request.values.get('picture_id')
+	mycursor = conn.cursor()
+	sql = "DELETE FROM Pictures where picture_id = %s"
+	mycursor.execute(sql, picture_id)
+	conn.commit()
+	return 
 
 #default page
 @app.route("/", methods=['GET'])

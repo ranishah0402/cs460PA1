@@ -2,21 +2,51 @@
     <title>Here are all the photos!</title>
 </head>
 
-{% if photos %}
-<h2>Here are all the photos</h2>
+    <h2>Here's your photos</h2>
+    <ul>
+    {% for i in range(photos |length) %}
 
+        <li>
+            </br>
+            <img width="450px" height="300px" src='data:image/png;base64, {{ photos[0] }}'/>
 
-    {% for photo in photos %}
+        {% if comments %}
+            <h2>Comments </h2>h2>
+            {%  for comment in comments[i] %}
+                <ul>
+                    <li>{{ comment }}</li>li>
+                </ul>
+            {% endfor %}
+        {% endif %}
 
-        <li>{{photo[2]}}<br>
-        <img src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
-        <label for="add_comment">Please comment:</label>
-        <input type="text" name="add_comment" required='false' />
-        <a href = "/Like"><input type = "button" value = "Like the photo"></a>
-        <a href = '/add_tag'><input type = "button" value = "Add a tag"></a> <!-- this should be in the upload photo page -->
+        {% if likes %}
+            <h3>Likes:</h3>
+        <p>{{ likes[i] }}</p>
+
+        <h2> Users who like this picture:</h2>
+        {% for user in usersLiked[i] %}
+            <p>{{ user }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form action = "add_comment" method = "POST">
+            <input type = "text" name = "comment" />
+            <label for="comment">Add a comment:</label>
+            <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
+            <input type= "submit" name = "add_comment" />
+
+        </form>
+    
+        <form action = "add_like" method = "POST">
+            <input type = "text" name = "like" />
+            <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
+            <input type = "button" name = "add_like" value = "add_like" />
+        </form>
+
+        </li>
     {% endfor %}
     </ul>
-{% endif %}
+
 
 <ul>
     <li><a href='/allphotos'>View All photos</a></li>
