@@ -225,8 +225,7 @@ def all_albums():
 def all_photos():
 	return render_template('allphotos.html',
 							comments=get_all_comments(getAllPIDS()), 
-							#likes = getLikes(getAllPIDS())[0],
-							#usersLiked=getLikes(getAllPIDS()),
+							usersLiked=getLikesUsers(getAllPIDS()),
 							message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
 							
 	#need to see all tags
@@ -378,7 +377,6 @@ def like():
 	if request.method == 'POST':
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		mycursor = conn.cursor()
-		
 		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s, %s)"
 		mycursor.execute(sql, (user_id, photo_id))
 		conn.commit()
@@ -389,25 +387,16 @@ def like():
 	
 #function directly called when rendering all_photos page
 #SOMETHING WRONG WITH FUNCTION 
-def getLikes(picture_ids):
-	#mycursor = conn.cursor()
-	#Likes = []
-	Users = []
-	for id in picture_ids:
-		#SAYING THERE IS A PROBLEM WITH SQL SYNTAX HERE 
-		#sql = "SELECT COUNT (*) FROM Likes WHERE photo_id = '{0}'".format(id) 
-		#mycursor.execute(sql)
-		#Like = int(mycursor.fetchone())
-		#Likes.append(Like)
-		mycursor = conn.cursor()
-		cursor.execute("SELECT user_id FROM Likes WHERE picture_id = '{0}'".format(id))
-		U = mycursor.fetchall()
-		#U = [str(getUserNameFromId(int(item[0]))) for item in U] #need to implement getuserfromid 
-		Users.append(U)
-	return  Users 
+def getLikesUsers(pids):
+	cursor = conn.cursor()
+	Likes = [] 
+	for id in pids:
+		cursor.execute("SELECT picture_id, user_id FROM Likes where picture_id = '{0}'".format(id))
+		T = cursor.fetchall()
+		C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
+		Likes.append(C)
+		return Likes
 
-
-	
 
 #-----COMMENT MANAGEMENT------
 
@@ -417,8 +406,8 @@ def add_comment():
 	pid = request.form.get('picture_id')
 	photo_id = int(pid)
 	if request.method == 'POST':
-		comment_text = request.form.get('add_comment')
 		uid = getUserIdFromEmail(flask_login.current_user.id)
+		comment_text = request.form.get('comment')
 		#increment_score(uid)
 		mycursor = conn.cursor()
 		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)"
@@ -439,6 +428,9 @@ def get_all_comments(pids):
 		C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
 		Comments.append(C)
 		return Comments
+
+
+
 		
 		
 	
