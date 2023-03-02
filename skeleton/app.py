@@ -193,7 +193,7 @@ def increment_score(uid):
 
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
-	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
+	cursor.execute("SELECT user_id FROM Users WHERE email = '{0}'".format(email))
 	return cursor.fetchone()[0]
 
 def isEmailUnique(email):
@@ -320,6 +320,7 @@ def getUserNameFromEmail(email):
 	U = cursor.fetchone()
 	U = [str(item) for item in U]
 	return U
+""" 
  #get the user name from email function:
 def getUserNameFromEmail(email):
 	mycursor = conn.cursor()
@@ -328,6 +329,7 @@ def getUserNameFromEmail(email):
 	N = cursor.fetchone()
 	#N = [str(x) for x in N]
 	return N 
+	"""
 
 #getting results of searched friends
 @app.route('/results', methods = ['POST', 'GET'])
@@ -335,10 +337,14 @@ def getUserNameFromEmail(email):
 def results():
 	if request.method == 'POST':
 		friendEmail = request.form.get('friendEmail')
-		user_creds = getUserNameFromEmail(friendEmail) 
+		#user_creds = getUserNameFromEmail(friendEmail) 
 		friend_id = getUserIdFromEmail(friendEmail)
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
-		return render_template('add_friend.html', user_creds = user_creds, friend_id=friend_id)
+		mycursor = conn.cursor()
+		sql = "INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id)
+		mycursor.execute("INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id))
+		conn.commit()
+		return render_template('add_friend.html')#, user_creds = user_creds, friend_id=friend_id)
 	else:
 		return render_template() #need to figure out what to redirect to
 		
