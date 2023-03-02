@@ -2,35 +2,20 @@
     <title>Here are all the photos!</title>
 </head>
 
-<h3>Search photos by tag </h3> 
-<form action = "search_tag" method = "POST">
-    <input type = "text" name = "searchTag" />
-    <input type = "submit" name = "search_tag" value = "search tag"/> 
-</form>   
-
-{%if search_tags %}
-    {%for tag in search_tags%}
-        <ul>
-            <li>
-                <img width="450px" height="300px" src='data:image/png;base64, {{ photos[0] }}'/>
-            </li>
-        </ul>
-    {%endfor%}
-{%endif%}
-
-<h2>Here's your photos</h2>
+    <h2>Here's your photos</h2>
     <ul>
     {% for i in range(photos |length) %}
 
         <li>
             </br>
-            <img width="450px" height="300px" src='data:image/png;base64, {{ photos[0] }}'/>
+            <img width="450px" height="300px" src='data:image/png;base64, {{ (photos[0]) }}'/>
+            
 
         {% if comments %}
-            <h2>Comments </h2>h2>
+            <h2>Comments </h2>
             {%  for comment in comments[i] %}
                 <ul>
-                    <li>{{ comment }}</li>li>
+                    <li>{{ comment }}</li>
                 </ul>
             {% endfor %}
         {% endif %}
@@ -45,9 +30,10 @@
             {% endfor %}
         {% endif %}
 
+        
         <form action = "add_comment" method = "POST">
             <input type = "text" name = "comment" />
-            <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
+            <input type = "hidden" value = {{ i + 1 }} name = "picture_id" required = 'true' />
             <input type= "submit" name = "add_comment" value = "add comment"/>
 
         </form>

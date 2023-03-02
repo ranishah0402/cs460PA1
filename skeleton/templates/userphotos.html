@@ -2,49 +2,71 @@
     <title>Here are your photos!</title>
 </head>
 
-{% if photos %}
-<h2>Here are your photos</h2>
-<a href='/create_album'>Create Album<input type = "button" value = "create_album"></a></li>
 
-    {% for photo in photos %}
-        <li>{{photo[2]}}<br>
-        <img width="450px" height="300px" src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
-        <form action = "add_tag" method = "POST">
+
+<h2>Here's your photos</h2>
+    <ul>
+    {% for i in range(photos |length) %}
+
+        <li>
+            </br>
+            <img width="450px" height="300px" src='data:image/jpg;base64, {{ (photos[0]) }}'/>
+            
+
+        {% if comments %}
+            <h2>Comments </h2>h2>
+            {%  for comment in comments[i] %}
+                <ul>
+                    <li>{{ comment }}</li>li>
+                </ul>
+            {% endfor %}
+        {% endif %}
+
+        {% if likes %}
+            <h3>Likes:</h3>
+        <p>{{ likes[i] }}</p>
+
+        <h2> Users who like this picture:</h2>
+        {% for user in usersLiked[i] %}
+            <p>{{ user }}</p>
+            {% endfor %}
+        {% endif %}
+
+        <form action = "delete_photo" method = "POST">
+          <input type = "text" name = "delete_photo" />
           <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
-          <input type = "text" name = "add_tag" />
-          <input type = "submit" name = "add_tag" value = "add tag"/> 
-        </form> 
-        <a href='/delete_photo'><input type = "button" value = "Delete Photo"></a></li>
+          <input type= "submit" name = "delete_photo" value = "delete photo"/>
+
+      </form>
+  
+      <form action = "add_tag" method = "POST">
+          <input type = "text" name = "tag" />
+          <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
+          <input type = "submit" name = "add_tag" value = "add tag" />
+      </form>
+
+        </li>
     {% endfor %}
     </ul>
-{% endif %}
 
-
-
-
-
-
-
-
-
-
-{% if message is none %}
-  <p>You should <a href='/login'>login!</a></p>
-{% else %}
-  <p> Go to <a href='/profile'>profile?</a></p>
-{% endif %}
 
 <ul>
-<li><a href='/allphotos'>View All photos</a></li>
-<li><a href='/allalbums'>View All Albums</a></li>
-<li><a href='/userphotos'>View User photos</a></li>
-<li><a href='/create_album'>Create an Album!</a></li>
-<li><a href='/contribution_score'>View Contribution Score</a></li>
-<li><a href ='/add_friend'>Add Friend</a></li>
-<li><a href='/upload'>Upload a photo</a> </li>
-<li><a href='/logout'>Logout</a></li>
-<li><a href='/'>Home</a></li>
+  <li><a href='/allphotos'>View All photos</a></li>
+  <li><a href='/allalbums'>View All Albums</a></li>
+  <li><a href='/userphotos'>View User photos</a></li>
+  <li><a href='/create_album'>Create an Album!</a></li>
+  <li><a href='/contribution_score'>View Contribution Score</a></li>
+  <li><a href ='/add_friend'>Add Friend</a></li>
+  <li><a href='/upload'>Upload a photo</a> </li>
+  <li><a href='/logout'>Logout</a></li>
+  <li><a href='/'>Home</a></li>
 </ul>
+
+
+
+
+
+
 
 
 
