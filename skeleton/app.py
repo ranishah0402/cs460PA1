@@ -23,7 +23,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Cs460cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Z@c!sstupid123'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -88,7 +88,8 @@ def login():
 		   <a href='/'>Home</a>
 			   '''
 	#The request method is POST (page is recieving data)
-	email = flask.request.form['email']
+	#email = flask.request.form['email']
+	email = request.form.get('email')
 	cursor = conn.cursor()
 	#check if email is registered
 	if cursor.execute("SELECT password FROM Users WHERE email = '{0}'".format(email)):
@@ -159,11 +160,24 @@ def isDOBvalid(birthday):
 	except ValueError:
 		return False
 
+def getUserNameFromId(user_id):
+    cursor = conn.cursor()
+    cursor.execute("SELECT first_name  FROM Users WHERE user_id = '{0}'".format(user_id))
+    return cursor.fetchone()[0]
+
 #NEW FUNCTION ADDED
 def getAllPhotos():
 	cursor = conn.cursor()
 	cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
 	return cursor.fetchall()
+    
+def getAllPIDS():
+	cursor = conn.cursor()
+	cursor.execute("SELECT picture_id FROM Pictures")
+	I = cursor.fetchall()
+	ids = [item[0] for item in I]
+	return ids
+
 
 def getUsersPhotos(uid):
 	cursor = conn.cursor()
@@ -205,29 +219,38 @@ def protected():
 def all_albums():
 	return render_template('allalbums.html', message="Here are all the albums")
 
+
+#all comments and number of likes along with name of user listed here 
 @app.route('/allphotos')
 def all_photos():
-	return render_template('allphotos.html', message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
-	#need to add option to add a tag -- this should be in upload photo
-	#need to add option to comment
-	#need to add option to like photo
+	return render_template('allphotos.html',
+							comments=get_all_comments(getAllPIDS()), 
+							#likes = getLikes(getAllPIDS())[0],
+							#usersLiked=getLikes(getAllPIDS()),
+							message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
+							
+	#need to see all tags
+	
 
 @app.route('/userphotos')
 @flask_login.login_required
 def user_photos():
 	uid = getUserIdFromEmail(flask_login.current_user.id)
-	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(), base64=base64)
+	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(uid), base64=base64)
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
 
 #Added new top 10 contributers function 
 
 def top_10_users():
-	#cursor = conn.cursor()
-	#cursor.execute("SELECT imgdata, picture_id, caption FROM Pictures")
-	#return cursor.fetchall()
-	#COMPLETE FUNCTION TO GET NAME OF HIGHEST CONTRIBUTION SCORE 
-	return
+	Users =[]
+	cursor = conn.cursor()
+	cursor.execute("SELECT user_id FROM Users order by contribution_score ASC LIMIT 10") #CHeck if this SQL code is right
+	U = cursor.fetchall()
+	Users.append(U)
+	return Users
+	 
+	 
 
 @app.route('/top_10_users')
 @flask_login.login_required
@@ -348,36 +371,40 @@ def add_tag():
 #view all tags
 
 #------LIKE MANAGEMENT---------
-@app.route('/Like', methods = ['GET', 'POST'])
-@flask_login.login_required
+@app.route('/add_like', methods = ['GET', 'POST'])
 def like():
 	pid = request.form.get('picture_id')
 	photo_id = int(pid)
 	if request.method == 'POST':
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		mycursor = conn.cursor()
+		
 		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s, %s)"
 		mycursor.execute(sql, (user_id, photo_id))
 		conn.commit()
-		return render_template() #not sure what template to return
-	return 
-	#need to figure out what template to render
-	#Add a like attribute associated with every photo and increase periodically
-
+		return render_template('allphotos.html') 
+	else:
+		return render_template('allphotos.html')
+	 
+	
+#function directly called when rendering all_photos page
+#SOMETHING WRONG WITH FUNCTION 
 def getLikes(picture_ids):
-	mycursor = conn.cursor()
-	Likes = []
+	#mycursor = conn.cursor()
+	#Likes = []
 	Users = []
 	for id in picture_ids:
-		sql = "SELECT COUNT (*) FROM Likes WHERE photo_id = '{0}'".format(id) 
-		mycursor.execute(sql)
-		Like = int(mycursor.fetchone())
-		Likes.append(Like)
-		cursor.execute("SELECT user_id FROM Likes WHERE photo_id = '{0}'".format(id))
+		#SAYING THERE IS A PROBLEM WITH SQL SYNTAX HERE 
+		#sql = "SELECT COUNT (*) FROM Likes WHERE photo_id = '{0}'".format(id) 
+		#mycursor.execute(sql)
+		#Like = int(mycursor.fetchone())
+		#Likes.append(Like)
+		mycursor = conn.cursor()
+		cursor.execute("SELECT user_id FROM Likes WHERE picture_id = '{0}'".format(id))
 		U = mycursor.fetchall()
 		#U = [str(getUserNameFromId(int(item[0]))) for item in U] #need to implement getuserfromid 
 		Users.append(U)
-	return Likes, Users 
+	return  Users 
 
 
 	
@@ -392,15 +419,29 @@ def add_comment():
 	if request.method == 'POST':
 		comment_text = request.form.get('add_comment')
 		uid = getUserIdFromEmail(flask_login.current_user.id)
-		increment_score(uid)
+		#increment_score(uid)
 		mycursor = conn.cursor()
 		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUES (%s, %s, %s)"
 		mycursor.execute(sql, (comment_text, uid, photo_id))
 		conn.commit()
-	return #not sure what to return here
-	#NEED TO FILL IN FUNCTIONALITY SQL 
+		return render_template('allphotos.html')
+	else:
+		return render_template('allphotos.html')
+	
 
-
+#function directly called when rendering all_photos page 
+def get_all_comments(pids):
+	cursor = conn.cursor()
+	Comments = []
+	for id in pids:
+		cursor.execute("SELECT comment_text, user_id FROM Comments where picture_id = '{0}'".format(id))
+		T = cursor.fetchall()
+		C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
+		Comments.append(C)
+		return Comments
+		
+		
+	
 
 #------PHOTO MANAGEMENT ------
 
@@ -419,7 +460,7 @@ def upload_file():
 		caption = request.form.get('caption')
 		photo_data =imgfile.read()
 		#Adding line to call function to increment contribution score
-		increment_score(uid)
+		#increment_score(uid)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s )''', (photo_data, uid, caption))
 		conn.commit()
