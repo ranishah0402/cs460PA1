@@ -77,7 +77,7 @@ CREATE TABLE assigned_tag(
 	picture_id int4,
     tag_id int4,
     CONSTRAINT photo_tag_pk PRIMARY KEY (picture_id, tag_id),
-    CONSTRAINT photo_fk3 FOREIGN KEY (picture_id) REFERENCES Pictures(picture_id),
+    CONSTRAINT photo_fk3 FOREIGN KEY (picture_id) REFERENCES Pictures(picture_id) ON DELETE CASCADE ,
 	CONSTRAINT tag_fk FOREIGN KEY (tag_id) REFERENCES Tag(tag_id)
 
 );

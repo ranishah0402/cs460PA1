@@ -24,7 +24,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Cs460cs460'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Z@c!sstupid123'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -543,15 +543,12 @@ def upload_file():
 #DELETE PHOTOS
 @app.route('/delete_photo', methods = ['POST'])
 @flask_login.login_required
-def delete_photo():
-	#NEED TO FINISH IN FUNCTIONALITY SQL
-	#Remove photo from specific user database 
+def delete_photo(): 
 	picture_id = request.values.get('picture_id')
 	mycursor = conn.cursor()
-	sql = "DELETE FROM Pictures where picture_id = %s"
-	mycursor.execute(sql, picture_id)
+	mycursor.execute("DELETE FROM Pictures where picture_id = '{0}'".format(picture_id))
 	conn.commit()
-	return 
+	return render_template('userphotos.html')
 
 #default page
 @app.route("/", methods=['GET'])
