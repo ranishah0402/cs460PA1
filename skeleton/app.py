@@ -24,7 +24,7 @@ app.secret_key = 'super secret string'  # Change this!
 
 #These will need to be changed according to your creditionals
 app.config['MYSQL_DATABASE_USER'] = 'root'
-app.config['MYSQL_DATABASE_PASSWORD'] = 'Z@c!sstupid123'
+app.config['MYSQL_DATABASE_PASSWORD'] = 'Cs460cs460'
 app.config['MYSQL_DATABASE_DB'] = 'photoshare'
 app.config['MYSQL_DATABASE_HOST'] = 'localhost'
 mysql.init_app(app)
@@ -417,14 +417,8 @@ def searchByTagPicture(tags):
 		output = cursor.fetchall()
 		output = [item[0] for item in output]
 		picture_ids.append(output) 
-	intersection = []
-	if len(picture_ids) > 1:
-		intersection = list(set(picture_ids[0]) & set(picture_ids[1]))
-	else:
-		intersection = picture_ids[0]
-	for index in range (len(picture_ids)-2):
-		intersection = list(set(intersection)) & set(picture_ids[index])
-	return intersection
+	intersectPictures = picture_ids[0].intersection(*picture_ids[1:])
+	return intersectPictures
 
 #search by tags function:
 #this will be in the all photos area
@@ -438,11 +432,11 @@ def search_tag_page():
 		intersectList = searchByTagPicture(tag_word)
 		photos = []
 		for pid in intersectList:
-			mycursor.execute("SELECT imgdata, caption FROM Pictures WHERE picture_id = '{0}'".format(pid))
+			mycursor.execute("SELECT imgdata, picture_id, caption FROM Pictures WHERE picture_id = '{0}'".format(pid))
 			output = cursor.fetchall()
 			output = [item[0] for item in output]
 			photos.append(output)
-		return render_template('allphotos.html', search_tags = photos)
+		return render_template('allphotos.html', search_tags = photos, message = "Here are searched pictures")
 	return render_template('allphotos.html')
 
 #view all tags
