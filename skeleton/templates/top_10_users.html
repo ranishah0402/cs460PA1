@@ -1,1 +1,11 @@
 <h> Here are the top 10 users</h>
+
+
+<h2>Here are the top 3 tags: </h2>
+{%if topTags%}
+    {%for tag in topTags%}
+        <ul>
+            <li>{{ tag }}</li>
+        </ul>
+    {%endfor%}
+{%endif%}

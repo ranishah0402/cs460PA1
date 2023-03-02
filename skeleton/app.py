@@ -445,7 +445,14 @@ def search_tag_page():
 		return render_template('allphotos.html', search_tags = photos)
 	return render_template('allphotos.html')
 
-#view all tags
+#find the top 3 most popular tags:
+def topTags():
+	mycursor = conn.cursor()
+	sql = "SELECT tag_word FROM assigned_tag, Tag GROUP BY (tag_id) HAVING COUNT (*) > 0 ORDER BY COUNT (*) DESC LIMIT 3"
+	mycursor.execute(sql)
+	output = cursor.fetchall()
+	tags = [(str(item[0])) for item in output]
+	return tags 
 
 #------LIKE MANAGEMENT---------
 @app.route('/add_like', methods = ['GET', 'POST'])
