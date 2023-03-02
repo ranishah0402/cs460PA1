@@ -2,7 +2,23 @@
     <title>Here are all the photos!</title>
 </head>
 
-    <h2>Here's your photos</h2>
+<h3>Search photos by tag </h3> 
+<form action = "search_tag" method = "POST">
+    <input type = "text" name = "searchTag" />
+    <input type = "submit" name = "search_tag" value = "search tag"/> 
+</form>   
+
+{%if search_tags %}
+    {%for tag in search_tags%}
+        <ul>
+            <li>
+                <img width="450px" height="300px" src='data:image/png;base64, {{ photos[0] }}'/>
+            </li>
+        </ul>
+    {%endfor%}
+{%endif%}
+
+<h2>Here's your photos</h2>
     <ul>
     {% for i in range(photos |length) %}
 

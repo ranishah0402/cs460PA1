@@ -13,5 +13,8 @@
                 <input type="text" name="caption" required='true' /><br />
                 <input type="submit" value="Upload" />
             </form>
-            <a href = '/add_tag'><input type = "button" value = "Add a tag"></a>
+            <form action = "add_tag" method = "POST">
+                <input type = "text" name = "addTag" />
+                <input type = "submit" name = "add_tag" value = "add tag"/> 
+            </form> 
     </body>

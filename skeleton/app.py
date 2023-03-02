@@ -9,6 +9,7 @@
 # see links for further understanding
 ###################################################
 
+import re
 import flask
 from flask import Flask, Response, request, render_template, redirect, url_for
 from flaskext.mysql import MySQL
@@ -397,15 +398,52 @@ def add_tag():
 		sql = "INSERT IGNORE INTO Tag (tag_word) VALUES (%s)"
 		mycursor.execute(sql, tag_w)
 		conn.commit()
-		tid = 0 #need to figure out how to get the id of the tag
-		sql2 = "INSERT INTO assigned_tag (photo_id, tag_id) VALUE (%s, %s)"
+		mycursor.execute("SELECT tag_id FROM Tag")
+		tid = mycursor.fetchone()[0]
+		sql2 = "INSERT INTO assigned_tag (picture_id, tag_id) VALUE (%s, %s)"
 		mycursor.execute(sql2, (picture_id, tid))
 		conn.commit()
-		return render_template()#not sure which template should be rendered
-	return render_template()
+		return render_template('userphotos.html')#not sure which template should be rendered
+	return render_template('userphotos.html')
 	#Add a tag attribute associated with every photo and add periodically
 
+#create intersection function
+def searchByTagPicture(tags):
+	tags = re.split("\s|,|:|\.|!|\?|@|#|$|%|\(|\)|-|_|\+|=|{|}|\[|\]|\"", tags)
+	picture_ids = []
+	mycursor = conn.cursor()
+	for t in tags:
+		mycursor.execute("SELECT picture_id FROM Tag T, assigned_tag A WHERE tag_word = '{0}'".format(t))
+		output = cursor.fetchall()
+		output = [item[0] for item in output]
+		picture_ids.append(output) 
+	intersection = []
+	if len(picture_ids) > 1:
+		intersection = list(set(picture_ids[0]) & set(picture_ids[1]))
+	else:
+		intersection = picture_ids[0]
+	for index in range (len(picture_ids)-2):
+		intersection = list(set(intersection)) & set(picture_ids[index])
+	return intersection
+
 #search by tags function:
+#this will be in the all photos area
+#need to include routing
+@app.route('/search_tag', methods = ['GET', 'POST'])
+def search_tag_page():
+	if(request.method == 'POST'):
+		tag_word=request.form.get('searchTag')
+		tag_word = str(tag_word)
+		mycursor = conn.cursor()
+		intersectList = searchByTagPicture(tag_word)
+		photos = []
+		for pid in intersectList:
+			mycursor.execute("SELECT imgdata, caption FROM Pictures WHERE picture_id = '{0}'".format(pid))
+			output = cursor.fetchall()
+			output = [item[0] for item in output]
+			photos.append(output)
+		return render_template('allphotos.html', search_tags = photos)
+	return render_template('allphotos.html')
 
 #view all tags
 

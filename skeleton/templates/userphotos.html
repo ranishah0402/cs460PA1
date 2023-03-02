@@ -7,11 +7,14 @@
 <a href='/create_album'>Create Album<input type = "button" value = "create_album"></a></li>
 
     {% for photo in photos %}
-
         <li>{{photo[2]}}<br>
         <img width="450px" height="300px" src='data:image/jpg;base64, {{ base64.b64encode(photo[0]).decode("ascii") }}'/>
+        <form action = "add_tag" method = "POST">
+          <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
+          <input type = "text" name = "add_tag" />
+          <input type = "submit" name = "add_tag" value = "add tag"/> 
+        </form> 
         <a href='/delete_photo'><input type = "button" value = "Delete Photo"></a></li>
-        <a href = '/add_tag'><input type = "button" value = "Add a tag"></a>
     {% endfor %}
     </ul>
 {% endif %}
