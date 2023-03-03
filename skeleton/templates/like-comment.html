@@ -1,5 +1,43 @@
-<form>
-    <label for="add_comment">Please comment:</label>
-    <input type="text" name="add_comment" required='false' />
-</form>
-<a href = "/Like"><input type = "button" value = "Like the photo"></a>
+{% if name %}
+<h1>Hello {{ name }}!</h1>
+{% endif %}
+
+{% if message %}
+<h1> {{ message }}!</h1>
+{% endif %}
+
+{% if photo %}
+  <h2>Here's this photo</h2>
+  {% endif %}
+  
+  <ul>
+  
+  
+
+         
+    {%if caption %}
+    <h2>Caption: </h2>
+        {{ caption }}
+    {%endif%}
+      
+
+  {% if comments %}
+      <h2>Comments </h2>
+      {%  for comment in comments %}
+          <ul>
+              <li>{{ comment }}</li>
+          </ul>
+      {% endfor %}
+  {% endif %}
+
+  {% if likes %}
+      <h3>Likes:</h3>
+  <p>{{ likes }}</p>
+
+  <h2> Users who like this picture:</h2>
+  {% for user in usersLiked %}
+      <p>{{ user }}</p>
+      {% endfor %}
+  {% endif %}
+
+  

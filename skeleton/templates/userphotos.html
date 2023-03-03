@@ -2,52 +2,48 @@
     <title>Here are your photos!</title>
 </head>
 
-
-
 <h2>Here's your photos</h2>
-    <ul>
-    {% for i in range(photos |length) %}
+<ul>
+    
+</ul>
 
-        <li>
+{% if photos %}
+		<h2>Here's your photos</h2>
+	    <ul>
+	    
+        
+    {% for picture_id in photos %}
+		<p>{{picture_id}}</p>
+
+               <li>
             </br>
-            <img width="450px" height="300px" src='data:image/jpg;base64, {{ (photos[i][0]) }}'/>
-            
-
-        {% if comments %}
-            <h2>Comments </h2>h2>
-            {%  for comment in comments[i] %}
-                <ul>
-                    <li>{{ comment }}</li>li>
-                </ul>
-            {% endfor %}
-        {% endif %}
-
-        {% if likes %}
-            <h3>Likes:</h3>
-        <p>{{ likes[i] }}</p>
-
-        <h2> Users who like this picture:</h2>
-        {% for user in usersLiked[i] %}
-            <p>{{ user }}</p>
-            {% endfor %}
-        {% endif %}
-
-        <form action = "delete_photo" method = "POST">
-          <input type = "text" name = "delete_photo" />
-          <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
-          <input type= "submit" name = "delete_photo" value = "delete photo"/>
-
-      </form>
+            <img width="450px" height="300px" src='data:image/png;base64, {{ (picture_id[]) }}'/>
   
-      <form action = "add_tag" method = "POST">
-          <input type = "text" name = "tag" />
-          <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
-          <input type = "submit" name = "add_tag" value = "add tag" />
-      </form>
 
-        </li>
-    {% endfor %}
-    </ul>
+        
+        <p>{{picture_id}}</p>
+        <form action = "delete_photo" method = "POST">
+            <input type = "text" name = "delete_photo" />
+            <input type = "hidden" value = {{picture_id}} name = "picture_id" required = 'true' />
+            <input type= "submit" name = "delete_photo" value = "delete photo"/>
+  
+        </form>
+    
+        <form action = "add_tag" method = "POST">
+            <input type = "text" name = "tag" />
+            <input type = "hidden" value = {{picture_id}} name = "picture_id" required = 'true' />
+            <input type = "submit" name = "add_tag" value = "add tag" />
+        </form>
+
+
+	{% endfor %}
+        
+    {% endif %}
+
+
+
+
+
 
 
 <ul>

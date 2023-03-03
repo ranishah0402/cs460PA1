@@ -1,1 +1,9 @@
-<h> Here are the top 10 users</h>
+<h> Here are the top 3 users</h>
+
+
+{% if content %}
+
+{% for user in content %}
+<h1> {{ user }}!<br /></h1>
+{%endfor%}
+{% endif %}

@@ -1,19 +1,37 @@
 <head>
     <title>Here are all the photos!</title>
 </head>
+<!DOCTYPE html>
+<body>
+	{% if name %}
+	  <h1>Hello {{ name }}!</h1>
+	{% endif %}
 
-    <h2>Here's your photos</h2>
-    <ul>
-    {% for i in range(photos |length) %}
+	{% if message %}
+	  <h1> {{ message }}!</h1>
+	{% endif %}
 
-        <li>
+	{% if photos %}
+		<h2>Here's your photos</h2>
+	    <ul>
+	    
+        
+    {% for picture_id in photos %}
+		<p>{{picture_id}}</p>
+
+               <li>
             </br>
-            <img width="450px" height="300px" src='data:image/png;base64, {{ (photos[i][0]) }}'/>
+            <img width="450px" height="300px" src='data:image/png;base64, {{ (picture_id[1]) }}'/>
+
+
+            <a href="{{ url_for('viewlikecomment', picture_id =picture_id) }}">
+                 view single photo's information (likes and comments and caption)
+            </a>
             
 
         {% if comments %}
             <h2>Comments </h2>
-            {%  for comment in comments[i] %}
+            {%  for comment in comments %}
                 <ul>
                     <li>{{ comment }}</li>
                 </ul>
@@ -25,29 +43,42 @@
         <p>{{ likes[i] }}</p>
 
         <h2> Users who like this picture:</h2>
-        {% for user in usersLiked[i] %}
+        {% for user in usersLiked[picture_id] %}
             <p>{{ user }}</p>
             {% endfor %}
         {% endif %}
 
         
+        <p>{{picture_id}}</p>
         <form action = "add_comment" method = "POST">
             <input type = "text" name = "comment" />
-            <input type = "hidden" value = {{ i + 1 }} name = "picture_id" required = 'true' />
-            <input type= "submit" name = "add_comment" value = "add comment"/>
-
+            <input type="hidden" name="picture_id" required='true' value={{picture_id}} required='true' />
+            <input type= "submit" name = "comment" value = "Add Comment"/>
+  
         </form>
-    
         <form action = "add_like" method = "POST">
-            <input type = "button" name = "like" />
-            <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
-            <input type = "button" name = "add_like" value = "add_like" />
+            <input type = "button" name = "add_like" />
+            <input type = "hidden" value = {{ picture_id}} name = "picture_id" required = 'true' />
+            <input type = "submit" name = "add_like" value = "like" />
         </form>
+       
 
         </li>
-    {% endfor %}
-    </ul>
 
+
+	{% endfor %}
+        
+    {% endif %}
+
+
+
+
+
+
+
+---------------
+
+   
 
 <ul>
     <li><a href='/allphotos'>View All photos</a></li>
