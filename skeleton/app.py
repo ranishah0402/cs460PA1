@@ -375,8 +375,14 @@ def add_friends():
 def friend_recs():
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
 	mycursor = conn.cursor()
-	sql = "SELECT email FROM Users U INNER JOIN friends_with ff ON U.user_id = ff.friend_id INNER JOIN friends_with f ON f.user_id = ff.friend_id WHERE ff.user_id = '{0}' AND U.user_id <> '{1}' AND NOT EXISTS (select f2.friend_id from friends_with f2 WHERE f2.friend_id = ff.friend_id AND U.user_id = f2.user_id)".format(user_id, user_id)
-	mycursor.execute(sql)
+	
+
+	sql3 = "SELECT U2.email FROM Users U JOIN friends_with F ON U.user_id = F.user_id \
+		CROSS JOIN friends_with FF ON F.friend_id = FF.user_id JOIN Users U2 ON U2.user_id = FF.friend_id \
+		WHERE FF.friend_id NOT IN (SELECT friend_id FROM friends_with WHERE user_id = '{0}') AND U.user_id = '{1}' \
+		AND FF.friend_id <> '{2}' GROUP BY FF.friend_id ORDER BY COUNT(FF.friend_id) DESC LIMIT 3"
+	other = "GROUP BY FF.friend_id ORDER BY COUNT(FF.friend_id) DESC LIMIT 3"
+	mycursor.execute(sql3.format(user_id, user_id, user_id))
 	#conn.commit()
 	output = mycursor.fetchall()
 	Friends_rec = [(str(item[0])) for item in output]
