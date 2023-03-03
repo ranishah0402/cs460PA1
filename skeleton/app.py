@@ -166,6 +166,11 @@ def getUserNameFromId(user_id):
     cursor.execute("SELECT first_name  FROM Users WHERE user_id = '{0}'".format(user_id))
     return cursor.fetchone()[0]
 
+def getUserFullNameFromId(user_id):
+    cursor = conn.cursor()
+    cursor.execute("SELECT first_name, last_name  FROM Users WHERE user_id = '{0}'".format(user_id))
+    return cursor.fetchone()[0]
+
 #NEW FUNCTION ADDED
 def getAllPhotos():
 	cursor = conn.cursor()
@@ -194,7 +199,7 @@ def increment_score(uid):
 
 def getUserIdFromEmail(email):
 	cursor = conn.cursor()
-	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}'".format(email))
+	cursor.execute("SELECT user_id  FROM Users WHERE email = '{0}';".format(email))
 	return cursor.fetchone()[0]
 
 def isEmailUnique(email):
@@ -279,19 +284,12 @@ def create_album():
 #SOMETHING IS WRONG WITH LOADING THIS BUT IM NOT SURE WHAT
 
 
-""" 
-@app.route('/add_friend')
-@flask_login.login_required #means that login must be provided to enter page
-def friend_rec():
-	return render_template('add_friend.html', name=flask_login.current_user.id, message="Here are your friend recommendations")
-"""
+
 
 #what to show on the add friend page right away
 
-@app.route('/add_friend')#, methods = ['GET'])
-
+@app.route('/add_friend', methods = ['POST', 'GET'])
 @flask_login.login_required
-
 def add_friend_page():
 	email = flask_login.current_user.id
 	uid = getUserIdFromEmail(email)
@@ -301,17 +299,21 @@ def add_friend_page():
 
 def showFriends(uid):
 	mycursor = conn.cursor()
-	sql = "SELECT friend_id FROM friends_with WHERE user_id = '%s'"
-	mycursor.execute(sql, uid)
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	sql = "SELECT friend_id FROM friends_with WHERE user_id = %s;", uid
+	mycursor.execute("SELECT friend_id FROM friends_with WHERE user_id = %s;", uid)
 	Res = mycursor.fetchall()
-	friendIds = [x[0] for x in Res]
+	#conn.commit()
+	friendIds = [(x[0])for x in Res]
 	Friends = []
 	for index in friendIds:
-		sql2 = "SELECT first_name, last_name FROM Users WHERE user_id = '%s'"
-		mycursor.execute(sql2, index)
-		F = (cursor.fetchone())
-		if(F!=None):
-			F = (str(F[0]), str(F[1]))
+		sql2 = "SELECT first_name, last_name FROM Users WHERE user_id = %s;",index
+		mycursor.execute("SELECT email FROM Users WHERE user_id = '%s';", index)
+		#conn.commit()
+		F = (mycursor.fetchone())
+		F = (str(F[0]))
+		#if(F!=None):
+			#F = (str(F[0]), str(F[1]))
 		Friends.append(F)
 	return Friends
 
@@ -325,30 +327,13 @@ def showFriends(uid):
 def getUserNameFromEmail(email):
 	mycursor = conn.cursor()
 	sql = "SELECT first_name, last_name FROM Users WHERE email = '%s'"
-	mycursor.execute(sql, email)
+	mycursor.execute("SELECT first_name, last_name FROM Users WHERE email = '%s';", email)
 	U = cursor.fetchone()
+	print(U)
 	U = [str(item) for item in U]
 	return U
 
-""" 
 
- #get the user name from email function:
-
-def getUserNameFromEmail(email):
-
-	mycursor = conn.cursor()
-
-	sql = "SELECT first_name, last_name  FROM Users WHERE email = '{0}'".format(email)
-
-	mycursor.execute(sql)
-
-	N = cursor.fetchone()
-
-	#N = [str(x) for x in N]
-
-	return N 
-
-	"""
 
 
 
@@ -357,31 +342,46 @@ def getUserNameFromEmail(email):
 @flask_login.login_required #means that login must be provided to enter page
 def results():
 	if request.method == 'POST':
-		friendEmail = request.form.get('friendEmail')
-		#user_creds = getUserNameFromEmail(friendEmail) 
+		friendEmail = request.form.get('friendsEmail')
 		friend_id = getUserIdFromEmail(friendEmail)
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		user_creds = getUserFullNameFromId(friend_id)
 		mycursor = conn.cursor()
 		sql = "INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id)
-		mycursor.execute("INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id))
-		conn.commit()
-		return render_template('add_friend.html')#, user_creds = user_creds, friend_id=friend_id)
+		#mycursor.execute("INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id))
+		#conn.commit()
+		return render_template('add_friend.html', user_creds = user_creds, friend_id=friend_id)#, user_creds = user_creds, friend_id=friend_id)
 	else:
-		return render_template() #need to figure out what to redirect to
+		return render_template('add_friend.html') #need to figure out what to redirect to
 
 #adding friends function	
 @app.route('/add_friends', methods = ['POST', 'GET'])
 @flask_login.login_required
-def add_friend():
-	friend_id = getUserIdFromEmail(request.form.get('friend_id'))
-	user_id = getUserIdFromEmail(flask_login.current_user.id)
-	mycursor = conn.cursor()
-	sql = "INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id)
-	mycursor.execute(sql)
-	conn.commit()
-	return flask.redirect(flask.url_for('add_friend_page')) 
+def add_friends():
+	if request.method == 'POST':
+		friend_id = request.form.get('friend_id')
+		user_id = getUserIdFromEmail(flask_login.current_user.id)
+		mycursor = conn.cursor()
+		sql = "INSERT IGNORE INTO friends_with user_id, friend_id VALUES %s, %s", user_id, friend_id
+		mycursor.execute("INSERT IGNORE INTO friends_with (user_id, friend_id) VALUES ('{0}', '{1}')".format(user_id, friend_id))
+		conn.commit()
+		return flask.redirect(flask.url_for('add_friend_page')) 
+	return flask.redirect(flask.url_for('add_friend_page'))
 
 	
+#give friend recommendations	
+#need to figure out routing
+@flask_login.login_required
+def friend_recs():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	mycursor = conn.cursor()
+	sql = "SELECT email FROM Users U INNER JOIN friends_with ff ON U.user_id = ff.friend_id INNER JOIN friend f ON f.user_id = ff.friend_id WHERE ff.user_id = '{0}' AND U.user_id <> '{1}'; AND NOT EXISTS (select f2.friend_id from friends_with f2 WHERE f2.friend_id = ff.friend_id AND U.user_id = f2.user_id)".format(user_id, user_id)
+	mycursor.execute(sql)
+	#conn.commit()
+	output = mycursor.fetchall()
+	Friends_rec = [(str(item[0])) for item in output]
+	return Friends_rec
+
 
 #-------END OF FRIEND MANAGEMENT--------
 

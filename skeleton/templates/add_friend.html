@@ -13,7 +13,7 @@
     {%if friends%}
         <ul>
             {%for friend in friends%}
-            <li><a href=""{{friend}}></li>
+                <li><a href="">{{friend}}</a></li>
             {%endfor%}
         </ul>
     {%endif%}
@@ -22,10 +22,9 @@
 
     <h3>Find New Friends: </h3>
     <form method="post" action="{{ url_for('results') }}"> 
-        <label for="new_friends">Enter their email:</label>
-        <input type="text" name="friendEmail" /><br />
+        <input type = "text" name="friendsEmail" placeholder="Enter email" />
         <input type="hidden" value = {{friend_id}} name="hidden" required='true' /><br />
-        <input type="submit" /> 
+        <input type="submit" name="submit" placeholder="Search for friends"/> 
     </form>
 
 
@@ -35,12 +34,14 @@
     {% if user_creds %}
         <h3> Here is your result: </h3>
         <p>{{user_creds}}</p>
-        <form action="{{url_for('add_friends')}}" method = "POST">
-            <input type="submit" name="add_friend" value="add friend"/>
+        <form method="post" action="{{url_for('add_friends')}}" >
+            <input type="submit" name="add_friends" value="add friend"/>
             <input type = "hidden" value = {{friend_id}} name="friend_id" required = 'true' />
         </form>
     {%endif%}
 
+
+    
 
 
     <ul>

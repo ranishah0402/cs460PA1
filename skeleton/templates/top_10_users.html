@@ -1,1 +1,23 @@
 <h> Here are the top 10 users</h>
+
+<h2>Here are the top 3 tags: </h2>
+{%if topTags%}
+    {%for tag in topTags%}
+        <ul>
+            <li>{{ tag }}</li>
+        </ul>
+    {%endfor%}
+{%endif%}
+
+<ul>
+    <li><a href='/allphotos'>View All photos</a></li>
+    <li><a href='/allalbums'>View All Albums</a></li>
+    <li><a href='/userphotos'>View User photos</a></li>
+    <li><a href='/create_album'>Create an Album!</a></li>
+    <li><a href='/my_contribution_score'>View Contribution Score</a></li>
+    <li><a href='/top_10_users'>Top 10 contributers</a></li>
+    <li><a href ='/add_friend'>Add Friend</a></li>
+    <li><a href='/upload'>Upload a photo</a> </li>
+    <li><a href='/logout'>Logout</a></li>
+    <li><a href='/'>Home</a></li>
+    </ul>
