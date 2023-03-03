@@ -176,7 +176,7 @@ def getAllPIDS():
 	cursor = conn.cursor()
 	cursor.execute("SELECT picture_id FROM Pictures")
 	I = cursor.fetchall()
-	ids = [item[0] for item in I]
+	ids = [int(item[0]) for item in I]
 	return ids
 
 
@@ -187,9 +187,21 @@ def getUsersPhotos(uid):
 
 #Adding too function to increment contribution score of specific user 
 #WORK ON 
+
+def get_caption(picture_id):
+	cursor = conn.cursor()
+	cursor.execute("SELECT caption from Pictures WHERE picture_id = '{0}'".format(picture_id))
+	return cursor.fetchall()
+
+def get_contribution_score(uid):
+	cursor = conn.cursor()
+	cursor.execute("SELECT contribution_score from Users WHERE user_id = '{0}'".format(uid))
+	return cursor.fetchone()[0]
+
 def increment_score(uid):
 	cursor = conn.cursor()
-	cursor.execute() #figure out how too increment contribution score 
+	contribution_score = get_contribution_score(uid)
+	cursor.execute("UPDATE Users SET contribution_score = '{0}' WHERE user_id = '{1}'".format(int(contribution_score) + 1, uid))  
 	return 
 
 def getUserIdFromEmail(email):
@@ -224,19 +236,53 @@ def all_albums():
 #all comments and number of likes along with name of user listed here 
 @app.route('/allphotos')
 def all_photos():
+	email = flask_login.current_user.id
 	return render_template('allphotos.html',
-							comments=get_all_comments(getAllPIDS()), 
-							usersLiked=getLikesUsers(getAllPIDS()),
-							message = "Here are all the photos", photos=getAllPhotos(), base64=base64)
+							#comments=get_all_comments(getAllPIDS()), 
+							#usersLiked=getLikesUsers(getAllPIDS()),
+							name = email,
+							photos = getAllPictureIds(),
+							message = "Here are all the photos", base64=base64)
 							
 	#need to see all tags
+@app.route('/<picture_id>')
+def viewlikecomment(picture_id):
+	#picture_id = request.form.get("picture_id")
+	picture_id = int(picture_id)
+	return render_template('like-comment.html',
+							#Add a option to add photo and then a function to get photo from picture_id
+							caption = get_caption(picture_id),
+							comments=get_photo_comments(picture_id), 
+							usersLiked=getLikesUsers(picture_id),
+							likes = getNoLikes(picture_id),
+							message = "Here are all the comments and likes", 
+							base64 = base64)
+
+
+
+
+
+
+
+
+
+
+
+
 	
 
 @app.route('/userphotos')
 @flask_login.login_required
 def user_photos():
 	uid = getUserIdFromEmail(flask_login.current_user.id)
-	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(uid), base64=base64)
+	return render_template('userphotos.html', 
+							name =flask_login.current_user.id, 
+							message="Here are your photos", 
+							photos=getUserPictureIds(uid), 
+							base64=base64)
+
+
+
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
 
@@ -245,7 +291,7 @@ def user_photos():
 def top_10_users():
 	Users =[]
 	cursor = conn.cursor()
-	cursor.execute("SELECT user_id FROM Users order by contribution_score ASC LIMIT 10") #CHeck if this SQL code is right
+	cursor.execute("SELECT first_name, last_name, contribution_score FROM Users order by contribution_score ASC LIMIT 3") 
 	U = cursor.fetchall()
 	Users.append(U)
 	return Users
@@ -441,7 +487,7 @@ def like():
 	if request.method == 'POST':
 		user_id = getUserIdFromEmail(flask_login.current_user.id)
 		mycursor = conn.cursor()
-		sql = "INSERT INTO Likes (user_id, photo_id) VALUES (%s, %s)"
+		sql = "INSERT INTO Likes (user_id, picture_id) VALUES (%s, %s)"
 		mycursor.execute(sql, (user_id, photo_id))
 		conn.commit()
 		return render_template('allphotos.html') 
@@ -451,29 +497,54 @@ def like():
 	
 #function directly called when rendering all_photos page
 #SOMETHING WRONG WITH FUNCTION 
-def getLikesUsers(pids):
+def getLikesUsers(pid):
 	cursor = conn.cursor()
 	Likes = [] 
-	for id in pids:
-		cursor.execute("SELECT picture_id, user_id FROM Likes where picture_id = '{0}'".format(id))
-		T = cursor.fetchall()
-		C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
-		Likes.append(C)
-		return Likes
+	cursor.execute("SELECT picture_id, user_id FROM Likes where picture_id = '{0}'".format(pid))
+	T = cursor.fetchall()
+	C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
+	Likes.append(C)
+	return Likes
+	
+def getNoLikes(pid):
+	cursor = conn.cursor()
+	No_likes = []
+	cursor.execute("SELECT COUNT(*) FROM Likes where picture_id = '{0}'".format(pid))
+	L = cursor.fetchone()
+	L = int(L[0])
+	No_likes.append(L)
+	return No_likes
 
 
 #-----COMMENT MANAGEMENT------
+
+#new functions to add 
+def getAllPictureIds():
+	cursor = conn.cursor()
+	cursor.execute("SELECT picture_id FROM Pictures")
+	R = cursor.fetchall()
+	row= [int(item[0]) for item in R]
+	return row
+
+
+def getUserPictureIds(uid):
+	cursor = conn.cursor()
+	cursor.execute("SELECT picture_id FROM Pictures WHERE user_id = '{0}'".format(uid))
+	R = cursor.fetchall()
+	row = [int(item[0]) for item in R]
+	return row
+
 
 @app.route("/add_comment", methods = ['GET', 'POST'])
 @flask_login.login_required
 def add_comment():
 	pid = request.form.get('picture_id')
 	photo_id = int(pid)
-	print(photo_id)
+	#print(photo_id)
 	if request.method == 'POST':
 		uid = getUserIdFromEmail(flask_login.current_user.id)
 		comment_text = request.form.get('comment')
-		#increment_score(uid)
+		increment_score(uid)
 		mycursor = conn.cursor()
 		sql = "INSERT INTO Comments (comment_text, user_id, picture_id) VALUE (%s, %s, %s)"
 		mycursor.execute(sql, (comment_text, uid, photo_id))
@@ -492,8 +563,16 @@ def get_all_comments(pids):
 		T = cursor.fetchall()
 		C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
 		Comments.append(C)
-		return Comments
+	return Comments
 
+def get_photo_comments(pid):
+	cursor = conn.cursor()
+	Comments = []
+	cursor.execute("SELECT comment_text, user_id FROM Comments where picture_id = '{0}'".format(pid))
+	T = cursor.fetchall()
+	C = [(str(item[0]), str(getUserNameFromId(int(item[1])))) for item in T]
+	Comments.append(C)
+	return Comments
 
 
 		
@@ -516,11 +595,11 @@ def upload_file():
 		caption = request.form.get('caption')
 		photo_data =imgfile.read()
 		#Adding line to call function to increment contribution score
-		#increment_score(uid)
+		increment_score(uid)
 		cursor = conn.cursor()
 		cursor.execute('''INSERT INTO Pictures (imgdata, user_id, caption) VALUES (%s, %s, %s )''', (photo_data, uid, caption))
 		conn.commit()
-		return render_template('userphotos.html', name=flask_login.current_user.id, message='Photo uploaded!', photos=getUsersPhotos(uid), base64=base64)
+		return render_template('hello.html', name=flask_login.current_user.id, message='Photo uploaded!')
 	#The method is GET so we return a  HTML form to upload the a photo.
 	else:
 		return render_template('upload.html')
@@ -593,6 +672,22 @@ def getAlbumIdFromName(albumName, uid):
 	cursor = conn.cursor()
 	cursor.execute("SELECT album_id FROM Album WHERE album_name = '{0}'AND user_id = '{1}'".format(albumName, uid))
 	return cursor.fetchone()[0]
+
+#new functions to add 
+def getAllPictureIds():
+	cursor = conn.cursor()
+	cursor.execute("SELECT picture_id FROM Pictures")
+	R = cursor.fetchall()
+	row= [int(item[0]) for item in R]
+	return row
+
+
+def getUserPictureIds(uid):
+	cursor = conn.cursor()
+	cursor.execute("SELECT picture_id FROM Pictures WHERE user_id = '{0}'".format(uid))
+	R = cursor.fetchall()
+	row = [int(item[0]) for item in R]
+	return row
 
 
 

@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS Users CASCADE;
 
 CREATE TABLE Users (
     user_id int4  NOT NULL AUTO_INCREMENT,
-    contribution_score int4,
+    contribution_score int4 DEFAULT 0,
     email varchar(255) UNIQUE,
     password varchar(255) NOT NULL DEFAULT '',
     first_name varchar(225) NOT NULL DEFAULT '',
