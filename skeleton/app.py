@@ -169,7 +169,7 @@ def getUserNameFromId(user_id):
 def getUserFullNameFromId(user_id):
     cursor = conn.cursor()
     cursor.execute("SELECT first_name, last_name  FROM Users WHERE user_id = '{0}'".format(user_id))
-    return cursor.fetchone()[0]
+    return cursor.fetchone()#[0]
 
 #NEW FUNCTION ADDED
 def getAllPhotos():
