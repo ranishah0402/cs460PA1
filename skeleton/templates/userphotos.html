@@ -2,7 +2,14 @@
     <title>Here are your photos!</title>
 </head>
 
-
+<h2>Here are the top 3 tags for you: </h2>
+{%if userTopTags%}
+    {%for tag in userTopTags%}
+        <ul>
+            <li>{{ tag }}</li>
+        </ul>
+    {%endfor%}
+{%endif%}
 
 <h2>Here's your photos</h2>
     <ul>
@@ -10,14 +17,14 @@
 
         <li>
             </br>
-            <img width="450px" height="300px" src='data:image/jpg;base64, {{ (photos[0]) }}'/>
+            <img width="450px" height="300px" src='data:image/jpg;base64, {{ (photos[i][0]) }}'/>
             
 
         {% if comments %}
-            <h2>Comments </h2>h2>
+            <h2>Comments </h2>
             {%  for comment in comments[i] %}
                 <ul>
-                    <li>{{ comment }}</li>li>
+                    <li>{{ comment }}</li>
                 </ul>
             {% endfor %}
         {% endif %}
@@ -33,14 +40,13 @@
         {% endif %}
 
         <form action = "delete_photo" method = "POST">
-          <input type = "text" name = "delete_photo" />
           <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
           <input type= "submit" name = "delete_photo" value = "delete photo"/>
 
       </form>
   
       <form action = "add_tag" method = "POST">
-          <input type = "text" name = "tag" />
+          <input type = "text" name = "add_tag" />
           <input type = "hidden" value = {{ i + 1}} name = "picture_id" required = 'true' />
           <input type = "submit" name = "add_tag" value = "add tag" />
       </form>
@@ -54,19 +60,10 @@
   <li><a href='/allphotos'>View All photos</a></li>
   <li><a href='/allalbums'>View All Albums</a></li>
   <li><a href='/userphotos'>View User photos</a></li>
-  <li><a href='/create_album'>Create an Album!</a></li>
+  <li><a href='/photos'>photo/album modification</a></li>
   <li><a href='/contribution_score'>View Contribution Score</a></li>
   <li><a href ='/add_friend'>Add Friend</a></li>
   <li><a href='/upload'>Upload a photo</a> </li>
   <li><a href='/logout'>Logout</a></li>
   <li><a href='/'>Home</a></li>
 </ul>
-
-
-
-
-
-
-
-
-

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+    <head> </head>
+
+
+    <body>
+        <h1>Browse by tag: </h1>
+
+        <form action = "search_tag" method = "POST">
+            <input type="text" placeholder="tag" name="tag_name" required='true' />
+            <input type="submit" name="search_tag" value="search"/>
+        </form>    
+
+        {%if search_tags %}
+            <h2>Here are search results</h2>
+            {%for item in search_tags%}
+                <ul>
+                    <li>
+                        <img width="450px" height="300px" src='data:image/png;base64, {{ (item[0]) }}'/>
+                    </li>
+                </ul>
+            {%endfor%}
+        {% endif %}
+
+        <h2>Your photos containing tag: {{tag_w}}</h2>
+        {%if userPhotos %}
+            {%for pic in userPhotos%}
+            <ul> 
+                <li> 
+                <img width="450px" height="300px" src='data:image/png;base64, {{ (pic[0]) }}'/>
+            </li>
+            </ul>
+            {%endfor%}
+        {%endif%}
+
+
+        <h2>All photos containing tag: {{tag_w}}</h2>
+        {%if Photos %}
+            {%for pic in Photos%}
+            <ul> 
+                <li> 
+                <img width="450px" height="300px" src='data:image/png;base64, {{ (pic[0]) }}'/>
+            </li>
+            </ul>
+            {%endfor%}
+        {%endif%}
+
+
+    </body>
+</html>
+

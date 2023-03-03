@@ -122,7 +122,6 @@ def register():
 
 
 @app.route("/register", methods=['POST'])
-
 def register_user():
 	try:
 		email=request.form.get('email')
@@ -241,7 +240,7 @@ def all_photos():
 @flask_login.login_required
 def user_photos():
 	uid = getUserIdFromEmail(flask_login.current_user.id)
-	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(uid), base64=base64)
+	return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(uid), userTopTags = userTopTags(uid), base64=base64)
 	#need to add option to delete or modify photos here 
 	#option to select photos to add to album or create new album 
 
@@ -260,7 +259,7 @@ def top_10_users():
 @app.route('/top_10_users')
 @flask_login.login_required
 def projecting_users():
-	return render_template('top_10_users.html', name = flask_login.current_user.id, message = "Here are the top 10 users", content = top_10_users(), base64=base64)
+	return render_template('top_10_users.html', name = flask_login.current_user.id, message = "Here are the top 10 users", content = top_10_users(), topTags = topTags(), base64=base64)
 	
 
 @app.route('/create_album', methods=['GET', 'POST'])
@@ -396,6 +395,7 @@ def friend_recs():
 @app.route('/add_tag', methods = ['GET', 'POST'])
 @flask_login.login_required
 def add_tag():
+	uid = getUserIdFromEmail(flask_login.current_user.id)
 	if request.method == 'POST':
 		tag_w = request.form.get('add_tag')
 		p = request.values.get('picture_id')
@@ -404,12 +404,12 @@ def add_tag():
 		sql = "INSERT IGNORE INTO Tag (tag_word) VALUES (%s)"
 		mycursor.execute(sql, tag_w)
 		conn.commit()
-		mycursor.execute("SELECT tag_id FROM Tag")
+		mycursor.execute("SELECT tag_id FROM Tag WHERE tag_word = %s", tag_w)
 		tid = mycursor.fetchone()[0]
 		sql2 = "INSERT INTO assigned_tag (picture_id, tag_id) VALUE (%s, %s)"
 		mycursor.execute(sql2, (picture_id, tid))
 		conn.commit()
-		return render_template('userphotos.html')#not sure which template should be rendered
+		return render_template('userphotos.html', name =flask_login.current_user.id, message="Here are your photos", photos=getUsersPhotos(uid), base64=base64)#not sure which template should be rendered
 	return render_template('userphotos.html')
 	#Add a tag attribute associated with every photo and add periodically
 
@@ -423,16 +423,23 @@ def searchByTagPicture(tags):
 		output = cursor.fetchall()
 		output = [item[0] for item in output]
 		picture_ids.append(output) 
-	intersectPictures = picture_ids[0].intersection(*picture_ids[1:])
+	intersectPictures = []
+	if len(picture_ids) <= 1:
+		intersectPictures = picture_ids[0]
+	else:
+		intersectPictures = list(set(picture_ids[0]) & set(picture_ids[1]))
+	for i in range(len(picture_ids)-2):
+		intersectPictures = list(set(intersectPictures) & set(picture_ids[i]))
 	return intersectPictures
 
+""" 
 #search by tags function:
 #this will be in the all photos area
 #need to include routing
 @app.route('/search_tag', methods = ['GET', 'POST'])
 def search_tag_page():
 	if(request.method == 'POST'):
-		tag_word=request.form.get('searchTag')
+		tag_word=request.form.get('search_tag')
 		tag_word = str(tag_word)
 		mycursor = conn.cursor()
 		intersectList = searchByTagPicture(tag_word)
@@ -444,25 +451,71 @@ def search_tag_page():
 			photos.append(output)
 		return render_template('allphotos.html', search_tags = photos, message = "Here are searched pictures")
 	return render_template('allphotos.html')
+"""
+def getPhotoIdsByTag(tag_word):
+	mycursor = conn.cursor()
+	mycursor.execute("SELECT A.picture_id FROM Tag T, assigned_tag A WHERE tag_word = %s;", tag_word)
+	output = cursor.fetchall()
+	output = [(int(item[0])) for item in output]
+	pics = []
+	for id in output:
+		mycursor.execute("SELECT imgdata, picture_id FROM Pictures WHERE picture_id = %s;", id)
+		output2 = mycursor.fetchall()
+		#output2 = [item[0] for item in output2]
+		pics.append(output2)
+	return pics
+
+#different variation of searching for tags:
+@app.route('/search_tag', methods = ['GET', 'POST'])
+def search_tag_page2():
+	if(request.method == 'POST'):
+		tag_word=request.form.get('search_tag')
+		pictures = []
+		if tag_word:
+			tag_word = tag_word.split()
+			if len(tag_word )== 1:
+				pictures = getPhotoIdsByTag(tag_word)
+			else:
+				for tag in tag_word:
+					pictures.append(getPhotoIdsByTag(tag))
+				pictures = set.intersection(*map(set, pictures)) 
+		return render_template('allphotos.html', search_tags = pictures, message = "Here are searched pictures")
+	return render_template('allphotos.html')
 
 #find the top 3 most popular tags:
+
 def topTags():
 	mycursor = conn.cursor()
-	sql = "SELECT tag_word FROM assigned_tag, Tag GROUP BY (tag_id) HAVING COUNT (*) > 0 ORDER BY COUNT (*) DESC LIMIT 3"
+	sql = "SELECT tag_id FROM assigned_tag GROUP BY (tag_id) HAVING COUNT(*) > 0 ORDER BY COUNT(*) DESC LIMIT 3"
 	mycursor.execute(sql)
-	output = cursor.fetchall()
-	tags = [(str(item[0])) for item in output]
-	return tags
+	output = mycursor.fetchall()
+	tags = [(item[0]) for item in output]
+	words = []
+	for t in tags:
+		sql2 = "SELECT tag_word FROM Tag WHERE tag_id = %s"
+		mycursor.execute(sql2, t)
+		output2 = mycursor.fetchall()
+		output2 = [item[0] for item in output2]
+		words.append(str(output2))
+	return words
 
 #find a single user's top 3 tags
-@flask_login.login_required
 def userTopTags(user_id):
+	#user_id = getUserIdFromEmail(flask_login.current_user.id)
 	mycursor = conn.cursor()
-	sql = "SELECT tag_id FROM assigned_tag, Tag, Pictures WHERE assigned_tag.picture_id = Pictures.picture_id and user_id = '{0}' GROUP BY tag_id HAVING COUNT (*) > 0 ORDER BY COUNT DESC LIMIT 3".format(user_id)
-	mycursor.execute(sql)
+	sql = "SELECT tag_id FROM assigned_tag, Pictures WHERE assigned_tag.picture_id = Pictures.picture_id and user_id = %s GROUP BY tag_id HAVING COUNT(*) > 0 ORDER BY COUNT(*) DESC LIMIT 3;"
+	mycursor.execute(sql, user_id)
 	output = cursor.fetchall()
-	tags = [(str(item[0])) for item in output]
-	return tags
+	tags = [(int(item[0])) for item in output]
+	words = []
+	for t in tags:
+		mycursor.execute("SELECT tag_word FROM Tag WHERE tag_id = %s", t)
+		output2 = mycursor.fetchall()
+		output2 = [item[0] for item in output2]
+		words.append(str(output2))
+	#if len(words)>3:
+		#return words[0:2]
+	return words
 
 #give them other photos based on their top 3 tags:
 @flask_login.login_required
@@ -490,6 +543,7 @@ def recPhotos():
 		output = mycursor.fetchall()
 		final_photos.append([item[0] for item in output])
 	return final_photos
+#--------END OF TAG MANAGEMENT---------
 
 #------LIKE MANAGEMENT---------
 @app.route('/add_like', methods = ['GET', 'POST'])
