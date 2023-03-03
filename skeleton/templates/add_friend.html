@@ -41,7 +41,14 @@
     {%endif%}
 
 
-    
+    {%if friend_recs %}
+        <h3>Friends Recommendations</h3>
+        {%for friend in friend_recs %}
+            <ul>
+                <li> {{friend}} </li>
+            </ul>
+        {%endfor%}
+    {%endif%}
 
 
     <ul>

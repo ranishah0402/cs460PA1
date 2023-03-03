@@ -293,7 +293,7 @@ def create_album():
 def add_friend_page():
 	email = flask_login.current_user.id
 	uid = getUserIdFromEmail(email)
-	return render_template('add_friend.html', name=flask_login.current_user.id, friends=showFriends(uid))
+	return render_template('add_friend.html', name=flask_login.current_user.id, friends=showFriends(uid), friend_recs=friend_recs())
 
 #showing a list of all of a user's friends
 
@@ -375,7 +375,7 @@ def add_friends():
 def friend_recs():
 	user_id = getUserIdFromEmail(flask_login.current_user.id)
 	mycursor = conn.cursor()
-	sql = "SELECT email FROM Users U INNER JOIN friends_with ff ON U.user_id = ff.friend_id INNER JOIN friend f ON f.user_id = ff.friend_id WHERE ff.user_id = '{0}' AND U.user_id <> '{1}'; AND NOT EXISTS (select f2.friend_id from friends_with f2 WHERE f2.friend_id = ff.friend_id AND U.user_id = f2.user_id)".format(user_id, user_id)
+	sql = "SELECT email FROM Users U INNER JOIN friends_with ff ON U.user_id = ff.friend_id INNER JOIN friends_with f ON f.user_id = ff.friend_id WHERE ff.user_id = '{0}' AND U.user_id <> '{1}' AND NOT EXISTS (select f2.friend_id from friends_with f2 WHERE f2.friend_id = ff.friend_id AND U.user_id = f2.user_id)".format(user_id, user_id)
 	mycursor.execute(sql)
 	#conn.commit()
 	output = mycursor.fetchall()
