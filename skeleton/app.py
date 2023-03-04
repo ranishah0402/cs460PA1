@@ -149,8 +149,9 @@ def register_user():
 		flask_login.login_user(user)
 		return render_template('hello.html', name=first_name, message='Account Created!')
 	else:
+
 		print("couldn't find all valid tokens")
-		return flask.redirect(flask.url_for('register'))
+		return "<a href='/register'>Email already in use, try again!</a>"
 
 import datetime
 def isDOBvalid(birthday):
@@ -248,7 +249,7 @@ def all_photos():
 @app.route('/<picture_id>')
 def viewlikecomment(picture_id):
 	#picture_id = request.form.get("picture_id")
-	picture_id = int(picture_id)
+	picture_id = (picture_id)
 	return render_template('like-comment.html',
 							#Add a option to add photo and then a function to get photo from picture_id
 							caption = get_caption(picture_id),
@@ -288,13 +289,22 @@ def user_photos():
 
 #Added new top 10 contributers function 
 
+def get_my_contribution_score():
+	user_id = getUserIdFromEmail(flask_login.current_user.id)
+	cursor = conn.cursor()
+	my_score = []
+	cursor.execute("SELECT contribution_score, first_name, last_name FROM Users WHERE user_id = '{0}'".format(user_id))
+	U = cursor.fetchall()
+	my_score.append(U)
+	return my_score
+
 def top_10_users():
 	Users =[]
 	cursor = conn.cursor()
-	cursor.execute("SELECT first_name, last_name, contribution_score FROM Users order by contribution_score ASC LIMIT 3") 
+	cursor.execute("SELECT first_name, last_name, contribution_score FROM Users order by contribution_score ASC LIMIT 10") 
 	U = cursor.fetchall()
 	Users.append(U)
-	return Users
+	return  Users
 	 
 	 
 
@@ -302,6 +312,11 @@ def top_10_users():
 @flask_login.login_required
 def projecting_users():
 	return render_template('top_10_users.html', name = flask_login.current_user.id, message = "Here are the top 10 users", content = top_10_users(), base64=base64)
+
+@app.route('/my_contribution_score')
+@flask_login.login_required
+def show_score():
+	return render_template('my_contribution_score.html', name = flask_login.current_user.id, message = "Here is your contribution score", content = get_my_contribution_score(), base64=base64)
 	
 
 
@@ -348,9 +363,6 @@ def showFriends(uid):
 	return Friends
 
 	
-
-
-
 
 
 #get someone's name from their email
@@ -698,7 +710,7 @@ def getAlbumsPhotos(album_id):
 	Photos = cursor.fetchall()
 	P = cursor.execute("SELECT picture_id FROM Pictures WHERE album_id = '{0}'".format(album_id))
 	p = cursor.fetchall()
-	pids = [item[0] for item in p]
+	pids = [int(item[0]) for item in p]
 	return Photos, pids
 
 '''
@@ -765,6 +777,18 @@ def show_photos():
 								photos=getAlbumsPhotos(album_id)[0],
                             	pids=getAlbumsPhotos(album_id)[1])
 
+
+
+@app.route('/<albumName>')
+def viewAlbumInfo(albumName):
+	#picture_id = request.form.get("picture_id")
+	#picture_id = int(picture_id)
+	uid = getUserIdFromEmail(flask_login.current_user.id)
+	album_id = getAlbumIdFromName(albumName, uid)
+	return render_template('albumphotos.html',
+							photos = getAlbumsPhotos(album_id)[1],
+							message = "Here are all the photos for this album", 
+							base64 = base64)
 
 
 
