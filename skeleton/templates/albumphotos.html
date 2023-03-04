@@ -1,0 +1,41 @@
+<head>
+    <title>Here are photos for this album!</title>
+</head>
+
+<h2>Here's photos for selected album </h2>
+<ul>
+    
+</ul>
+
+{% if photos %}
+		<h2>Here's your photos</h2>
+	    
+    {% for picture_id in photos %}
+		<p>{{picture_id}}</p>
+               <li>
+            </br>
+            <img width="450px" height="300px" src='data:image/png;base64, {{ (picture_id[]) }}'/>
+	{% endfor %}
+        
+{% endif %}
+
+
+    <ul>
+        <li><a href='/allphotos'>View All photos</a></li>
+        <li><a href='/userphotos'>View User photos</a></li>
+        <li><a href='/photos'>Create albums</a></li>
+        <li><a href='/my_contribution_score'>View Contribution Score</a></li>
+        <li><a href = '/top_10_users'>View top tags and contributers</a></li>
+        <li><a href='/upload'>Upload a photo</a> </li>
+        <li><a href ='/add_friend'>Add Friend</a></li>
+        <li><a href='/logout'>Logout</a></li>
+        <li><a href='/'>Home</a></li>
+     </ul>
+
+
+
+
+
+
+
+

@@ -15,6 +15,15 @@
         
     {% for albumName in albums %}
 		<p>{{albumName}}</p>
+
+        <li>
+
+            <a href="{{ url_for('viewAlbumInfo', albumName=albumName) }}">
+            view single album's information (photos in album)
+        </a>
+
+           
+
         <form action = "remove_album" method = "POST">
             <input type = "text" name = "remove_album" />
             <input type="hidden" name="albumName" required='true' value={{albumName}} required='true' />
@@ -30,11 +39,16 @@
             <input type="hidden" name="albumName" required='true' value={{albumName}} required='true' />
             <input type="submit" value="Upload" />
         </form>
+        
+        
 
 
 	{% endfor %}
+    {% endif %}
+
+    {% if photos %}
         
-	{% endif %}
+	
 
 	<div class="col-md-6">
 		<div id="logbox">
@@ -46,12 +60,13 @@
 	    </div>
 	</div>
 
-
+    {% endif %}
 
 	{% if photos %}
 		<h2>Here's your photos</h2>
 	    <ul>
 		    {% for i in range(photos|length) %}
+                
 		        <li><img width="450px" height="300px" src='data:image/png;base64, {{photos[i][0]}}'/></li>
 		        <form method="post" enctype="multipart/form-data" action="{{ url_for('add_tag') }}">
 		        	<input type="hidden" name="albumName" required='true' value={{albumName}} required='true' />
@@ -60,22 +75,22 @@
 		    {% endfor %}
 	    </ul>
 	{% endif %}
+    
+</li>
 </body>
 
 
 <ul>
     <li><a href='/allphotos'>View All photos</a></li>
-    <li><a href='/allalbums'>View All Albums</a></li>
     <li><a href='/userphotos'>View User photos</a></li>
-    <li><a href='/photos'>photo/album modification</a></li>
+    <li><a href='/photos'>Create albums</a></li>
     <li><a href='/my_contribution_score'>View Contribution Score</a></li>
-    <li><a href='/top_10_users'>Top 10 contributers</a></li>
+    <li><a href = '/top_10_users'>View top tags and contributers</a></li>
     <li><a href='/upload'>Upload a photo</a> </li>
     <li><a href ='/add_friend'>Add Friend</a></li>
     <li><a href='/logout'>Logout</a></li>
     <li><a href='/'>Home</a></li>
     </ul>
-
 
 
 
